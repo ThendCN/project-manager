@@ -1,7 +1,7 @@
 {
-  "name": "project-manager",
+  "name": "claude-code-project-manager",
   "version": "1.0.0",
-  "description": "项目管理系统 - 图形化管理多个开发项目",
+  "description": "Claude Code 项目管理系统 - 专为使用 Claude Code 开发众多本地项目的工程师设计的一站式管理工具",
   "scripts": {
     "install:all": "cd backend && npm install && cd ../frontend && npm install",
     "dev": "npm run dev:backend & npm run dev:frontend",
@@ -10,7 +10,18 @@
     "build": "cd frontend && npm run build",
     "start": "cd backend && npm start"
   },
-  "keywords": ["project-management", "dashboard"],
-  "author": "",
+  "keywords": [
+    "claude-code",
+    "project-management",
+    "dashboard",
+    "ai-assistant",
+    "multi-project",
+    "developer-tools"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ThendCN/project-manager.git"
+  },
+  "author": "ThendCN",
   "license": "MIT"
 }

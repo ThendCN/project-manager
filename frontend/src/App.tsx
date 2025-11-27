@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Folder, Activity, Play, Square, CheckSquare, Square as SquareIcon } from 'lucide-react';
+import { RefreshCw, Folder, Activity, Play, Square, CheckSquare, Square as SquareIcon, Settings as SettingsIcon } from 'lucide-react';
 import { ProjectsConfig, ProjectStatus } from './types';
 import { fetchProjects, fetchBatchStatus, batchOperation } from './api';
 import ProjectCard from './components/ProjectCard';
+import Settings from './components/Settings';
 
 export default function App() {
   const [config, setConfig] = useState<ProjectsConfig | null>(null);
@@ -12,6 +13,7 @@ export default function App() {
   const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [batchLoading, setBatchLoading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -125,7 +127,7 @@ export default function App() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <Folder size={28} color="#3b82f6" />
-              <h1 style={{ fontSize: '24px', fontWeight: '600' }}>项目管理系统</h1>
+              <h1 style={{ fontSize: '24px', fontWeight: '600' }}>Claude Code 项目管理系统</h1>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div style={{ display: 'flex', gap: '8px', color: '#6b7280', fontSize: '14px' }}>
@@ -154,6 +156,25 @@ export default function App() {
               >
                 <CheckSquare size={16} />
                 {selectionMode ? '退出多选' : '批量操作'}
+              </button>
+              <button
+                onClick={() => setShowSettings(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 16px',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  background: 'white',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                <SettingsIcon size={16} />
+                设置
               </button>
               <button
                 onClick={loadData}
@@ -331,8 +352,11 @@ export default function App() {
         color: '#9ca3af',
         fontSize: '14px'
       }}>
-        <p>项目管理系统 v1.0.0 | 运行在端口 9999</p>
+        <p>Claude Code 项目管理系统 v1.0.0 | 运行在端口 9999</p>
       </footer>
+
+      {/* Settings Modal */}
+      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 {
-  "name": "project-manager-frontend",
+  "name": "claude-code-project-manager-frontend",
   "version": "1.0.0",
+  "description": "Claude Code 项目管理系统前端 - 可视化项目管理界面",
   "type": "module",
   "scripts": {
     "dev": "vite",

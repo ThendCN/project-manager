@@ -1,7 +1,11 @@
-<h1 align="center">🚀 Project Manager</h1>
+<h1 align="center">🚀 Claude Code 项目管理系统</h1>
 
 <p align="center">
-  <strong>智能化多项目管理系统 | Intelligent Multi-Project Management System</strong>
+  <strong>专为 Claude Code 开发者打造的智能项目管理工具</strong>
+</p>
+
+<p align="center">
+  一站式管理使用 Claude Code 开发的众多本地项目
 </p>
 
 <p align="center">
@@ -22,15 +26,29 @@
 
 ## 📖 简介
 
-Project Manager 是一个现代化的图形化项目管理工具,专为开发者设计,用于统一管理多个开发项目。提供项目状态监控、快速操作、AI 编程助手等强大功能,让项目管理更加高效。
+**Claude Code 项目管理系统**是专为使用 [Claude Code](https://claude.ai/) 进行开发的工程师设计的一站式项目管理工具。
+
+### 🎯 核心定位
+
+当你使用 Claude Code 管理多个本地项目时，经常会遇到以下问题：
+- 🤔 项目太多，不知道哪个项目在什么状态
+- 📁 需要频繁切换项目目录
+- 🔄 忘记某个项目用的是什么技术栈
+- 🐛 不记得项目的启动命令
+- 📊 想快速查看所有项目的 Git 状态
+
+**本系统完美解决这些痛点！**
+
+提供可视化界面统一管理所有 Claude Code 项目，实时监控项目状态、快速执行常用操作，并可选配置 AI 辅助功能，让多项目开发更高效、更轻松。
 
 ### ✨ 核心特性 {#features}
 
-#### 🎯 项目管理
-- **可视化项目卡片** - 清晰展示所有项目,支持按状态分类(活跃/生产/归档)
+#### 🎯 Claude Code 项目统一管理
+- **可视化项目卡片** - 清晰展示所有 Claude Code 项目，支持按状态分类（活跃/生产/归档）
 - **实时状态监控** - 自动检测 Git 状态、依赖安装状态、运行状态
 - **智能项目检测** - 自动识别项目类型、技术栈、启动命令
 - **分类筛选** - 快速筛选不同状态的项目
+- **多项目视图** - 一屏掌握所有 Claude Code 项目的健康状况
 
 #### ⚡ 快速操作
 - **一键操作** - 打开目录、启动 VSCode、安装依赖
@@ -38,11 +56,12 @@ Project Manager 是一个现代化的图形化项目管理工具,专为开发者
 - **批量操作** - 同时操作多个项目
 - **配置编辑** - 图形化编辑项目配置
 
-#### 🤖 AI 编程助手
-- **Claude Code 集成** - 内置 Claude Agent SDK,提供 AI 编程支持
-- **实时对话** - 流式输出,实时显示 AI 执行过程
+#### 🤖 AI 编程助手（可选）
+- **Claude Code 集成** - 内置 Claude Agent SDK，提供 AI 编程支持
+- **实时对话** - 流式输出，实时显示 AI 执行过程
 - **Markdown 渲染** - 支持代码高亮、复制功能
-- **历史记录** - 自动保存对话历史,支持回溯
+- **历史记录** - 自动保存对话历史，支持回溯
+- **API Key 获取** - 可从 [虎三小破站](https://api.husanai.com/register?aff=c34V) 申请（国内访问快速稳定）
 
 #### 📊 进程监控
 - **服务管理** - 启动/停止项目开发服务器
@@ -76,15 +95,19 @@ npm run install:all
 # 复制示例配置
 cp .claude/projects.example.json .claude/projects.json
 
-# 编辑配置,添加你的项目
+# 编辑配置，添加你的 Claude Code 项目
 # 配置格式参见下方「配置说明」
 ```
 
-4. **配置环境变量(可选)**
+4. **配置环境变量（可选 - 仅需使用 AI 功能时配置）**
 ```bash
-# 如果需要使用 AI 功能
+# 方式一：使用图形界面配置（推荐）
+# 启动应用后，点击右上角「设置」按钮进行配置
+
+# 方式二：手动配置文件
 cp .env.example .env
-# 编辑 .env 文件,填入 ANTHROPIC_API_KEY
+# 编辑 .env 文件，填入 ANTHROPIC_API_KEY
+# API Key 可从虎三小破站申请: https://api.husanai.com/register?aff=c34V
 ```
 
 5. **启动开发服务**
@@ -103,6 +126,13 @@ npm run dev:backend
 6. **访问应用**
 
 打开浏览器访问 http://localhost:5173
+
+7. **（可选）配置 AI 功能**
+
+如果需要使用 AI 辅助功能：
+- 点击右上角「设置」按钮
+- 填入 Anthropic API Key（可从 [虎三小破站](https://api.husanai.com/register?aff=c34V) 申请）
+- 配置完成后即可使用 AI 编程助手
 
 ## 📋 配置说明
 
