@@ -2,8 +2,6 @@
   <img src="logo.svg" alt="CCMage Logo" width="400">
 </p>
 
-<h1 align="center">🚀 CCMage</h1>
-
 <p align="center">
   <strong>专为 Vibe Coding 开发者打造的智能项目管理工具</strong>
 </p>
