@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- 📝 品牌升级：项目更名为 CCMage
+- 🎯 定位调整：从"Claude Code 开发者"转向"Vibe Coding 开发者"
+- 🎨 新增 CCMage Logo (logo.svg)
+
 ## [1.1.0] - 2025-11-28
 
 ### Added
@@ -122,5 +129,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 任务管理系统 (Todo CRUD)
 - 项目分析基础功能
 
-[1.1.0]: https://github.com/yourusername/project-manager/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/yourusername/project-manager/releases/tag/v1.0.0
+[1.1.0]: https://github.com/ThendCN/ccmage/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/ThendCN/ccmage/releases/tag/v1.0.0

@@ -1,11 +1,15 @@
-<h1 align="center">🚀 Claude Code 项目管理系统</h1>
+<p align="center">
+  <img src="logo.svg" alt="CCMage Logo" width="400">
+</p>
+
+<h1 align="center">🚀 CCMage</h1>
 
 <p align="center">
-  <strong>专为 Claude Code 开发者打造的智能项目管理工具</strong>
+  <strong>专为 Vibe Coding 开发者打造的智能项目管理工具</strong>
 </p>
 
 <p align="center">
-  一站式管理使用 Claude Code 开发的众多本地项目
+  一站式管理使用 Vibe Coding 模式开发的众多本地项目
 </p>
 
 <p align="center">
@@ -26,11 +30,11 @@
 
 ## 📖 简介
 
-**Claude Code 项目管理系统**是专为使用 [Claude Code](https://claude.ai/) 进行开发的工程师设计的一站式项目管理工具。
+**CCMage**是专为 Vibe Coding 开发者设计的一站式项目管理工具。
 
 ### 🎯 核心定位
 
-当你使用 Claude Code 管理多个本地项目时，经常会遇到以下问题：
+当你使用 Vibe Coding 模式管理多个本地项目时，经常会遇到以下问题：
 - 🤔 项目太多，不知道哪个项目在什么状态
 - 📁 需要频繁切换项目目录
 - 🔄 忘记某个项目用的是什么技术栈
@@ -39,16 +43,16 @@
 
 **本系统完美解决这些痛点！**
 
-提供可视化界面统一管理所有 Claude Code 项目，实时监控项目状态、快速执行常用操作，并可选配置 AI 辅助功能，让多项目开发更高效、更轻松。
+提供可视化界面统一管理所有项目，实时监控项目状态、快速执行常用操作，并可选配置 AI 辅助功能，让多项目开发更高效、更轻松。
 
 ### ✨ 核心特性 {#features}
 
-#### 🎯 Claude Code 项目统一管理
-- **可视化项目卡片** - 清晰展示所有 Claude Code 项目，支持按状态分类（活跃/生产/归档）
+#### 🎯 项目统一管理
+- **可视化项目卡片** - 清晰展示所有项目，支持按状态分类（活跃/生产/归档）
 - **实时状态监控** - 自动检测 Git 状态、依赖安装状态、运行状态
 - **智能项目检测** - 自动识别项目类型、技术栈、启动命令
 - **分类筛选** - 快速筛选不同状态的项目
-- **多项目视图** - 一屏掌握所有 Claude Code 项目的健康状况
+- **多项目视图** - 一屏掌握所有项目的健康状况
 
 #### ⚡ 快速操作
 - **一键操作** - 打开目录、启动 VSCode、安装依赖
@@ -57,7 +61,7 @@
 - **配置编辑** - 图形化编辑项目配置
 
 #### 🤖 AI 编程助手（可选）
-- **Claude Code 集成** - 内置 Claude Agent SDK，提供 AI 编程支持
+- **AI 集成** - 内置 Claude Agent SDK，提供 AI 编程支持
 - **实时对话** - 流式输出，实时显示 AI 执行过程
 - **Markdown 渲染** - 支持代码高亮、复制功能
 - **历史记录** - 自动保存对话历史，支持回溯
@@ -80,8 +84,8 @@
 
 1. **克隆项目**
 ```bash
-git clone https://github.com/yourusername/project-manager.git
-cd project-manager
+git clone https://github.com/ThendCN/ccmage.git
+cd ccmage
 ```
 
 2. **安装依赖**
@@ -95,7 +99,7 @@ npm run install:all
 # 复制示例配置
 cp .claude/projects.example.json .claude/projects.json
 
-# 编辑配置，添加你的 Claude Code 项目
+# 编辑配置，添加你的项目
 # 配置格式参见下方「配置说明」
 ```
 
@@ -197,7 +201,7 @@ project-manager/
 │   ├── routes.js              # API 路由定义
 │   ├── processManager.js      # 进程管理模块
 │   ├── startupDetector.js     # 项目启动命令检测
-│   ├── claudeCodeManager.js   # Claude Code SDK 集成
+│   ├── claudeCodeManager.js   # AI SDK 集成
 │   └── package.json           # 后端依赖
 ├── frontend/                   # 前端应用
 │   ├── src/
@@ -211,10 +215,11 @@ project-manager/
 │   │   └── types.ts           # TypeScript 类型定义
 │   ├── index.html             # HTML 入口
 │   └── package.json           # 前端依赖
-├── .claude/                    # Claude Code 配置
+├── .claude/                    # 项目配置
 │   └── projects.example.json  # 项目配置示例
 ├── docs/                       # 文档目录
 │   └── ARCHITECTURE.md        # 架构文档
+├── logo.svg                   # CCMage Logo
 ├── .gitignore                 # Git 忽略规则
 ├── .env.example               # 环境变量示例
 ├── LICENSE                    # MIT 许可证

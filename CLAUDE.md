@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-这是一个专为 Claude Code 开发者设计的项目管理系统,通过可视化界面统一管理多个本地项目,提供项目状态监控、进程管理和 AI 辅助功能。
+**CCMage** 是专为 Vibe Coding 开发者设计的项目管理系统，通过可视化界面统一管理多个本地项目，提供项目状态监控、进程管理和 AI 辅助功能。
 
-**核心定位**: 解决使用 Claude Code 管理多项目时的切换、状态追踪和协同问题。
+**核心定位**: 解决 Vibe Coding 模式下管理多项目时的切换、状态追踪和协同问题。
 
 ## 架构说明
 

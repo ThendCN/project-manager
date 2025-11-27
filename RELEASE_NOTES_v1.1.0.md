@@ -3,6 +3,7 @@
 **发布日期**: 2025-11-28
 **版本**: v1.1.0
 **类型**: Feature Release
+**项目**: CCMage - 专为 Vibe Coding 开发者打造的智能项目管理工具
 
 ---
 
@@ -177,9 +178,9 @@
 
 ## 🔗 相关链接
 
-- **GitHub 仓库**: https://github.com/ThendCN/project-manager
-- **问题反馈**: https://github.com/ThendCN/project-manager/issues
-- **提交记录**: https://github.com/ThendCN/project-manager/commit/7eacad7
+- **GitHub 仓库**: https://github.com/ThendCN/ccmage
+- **问题反馈**: https://github.com/ThendCN/ccmage/issues
+- **提交记录**: https://github.com/ThendCN/ccmage/commit/7eacad7
 
 ---
 
@@ -197,7 +198,7 @@
 
 感谢所有贡献者和使用者的支持！
 
-如有问题或建议，欢迎提交 [Issue](https://github.com/ThendCN/project-manager/issues)。
+如有问题或建议，欢迎提交 [Issue](https://github.com/ThendCN/ccmage/issues)。
 
 ---
 
@@ -205,8 +206,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/ThendCN/project-manager.git
-cd project-manager
+git clone https://github.com/ThendCN/ccmage.git
+cd ccmage
 
 # 切换到 v1.1.0
 git checkout v1.1.0

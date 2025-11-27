@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <defs>
+    <linearGradient id="magicGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#6366F1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="hatGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333EA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 魔法帽 -->
+  <g id="wizardHat" transform="translate(15, 15)">
+    <!-- 帽檐 -->
+    <ellipse cx="40" cy="75" rx="35" ry="8" fill="url(#hatGradient)" opacity="0.9"/>
+    <!-- 帽身 -->
+    <path d="M 15 75 Q 40 10, 65 75 Z" fill="url(#hatGradient)" filter="url(#glow)"/>
+    <!-- 代码符号 <> -->
+    <text x="25" y="55" font-family="'Courier New', monospace" font-size="24" font-weight="bold" fill="#FFFFFF" opacity="0.95">
+      &lt;/&gt;
+    </text>
+    <!-- 星星装饰 -->
+    <circle cx="20" cy="30" r="2" fill="#FCD34D" filter="url(#glow)"/>
+    <circle cx="60" cy="35" r="1.5" fill="#FCD34D" filter="url(#glow)"/>
+    <circle cx="50" cy="20" r="1.8" fill="#F59E0B" filter="url(#glow)"/>
+  </g>
+
+  <!-- 文字 CCMage -->
+  <g id="text" transform="translate(100, 35)">
+    <text x="0" y="30" font-family="'Arial', sans-serif" font-size="42" font-weight="bold" fill="url(#magicGradient)">
+      CCMage
+    </text>
+    <text x="0" y="55" font-family="'Arial', sans-serif" font-size="14" font-weight="normal" fill="#6B7280">
+      Vibe Coding Project Manager
+    </text>
+  </g>
+
+  <!-- 魔法光环装饰 -->
+  <g id="sparkles" opacity="0.6">
+    <circle cx="280" cy="25" r="2" fill="#8B5CF6"/>
+    <circle cx="295" cy="35" r="1.5" fill="#6366F1"/>
+    <circle cx="310" cy="28" r="2.5" fill="#3B82F6"/>
+    <path d="M 330 30 L 332 33 L 335 31 L 333 28 Z" fill="#FCD34D"/>
+    <path d="M 350 40 L 351 42 L 353 41 L 352 39 Z" fill="#F59E0B"/>
+  </g>
+</svg>
