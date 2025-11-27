@@ -1,6 +1,6 @@
 {
   "name": "claude-code-project-manager-backend",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Claude Code 项目管理系统后端 API - 项目状态监控、进程管理、AI 辅助",
   "main": "server.js",
   "scripts": {
