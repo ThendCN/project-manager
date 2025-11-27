@@ -18,10 +18,10 @@ const PORT = process.env.PORT || 9999;
 
 // 项目根目录配置
 // 优先使用环境变量配置的绝对路径，避免相对路径问题
-// 如果未配置，默认使用 backend 的上一级目录（project-manager）
+// 如果未配置，默认使用 backend 的上两级目录（../.. = Project 目录）
 const PROJECT_ROOT = process.env.PROJECT_ROOT
   ? path.resolve(process.env.PROJECT_ROOT)
-  : path.resolve(__dirname, '..');
+  : path.resolve(__dirname, '../..');
 const PROJECTS_CONFIG = path.join(PROJECT_ROOT, '.claude/projects.json');
 const ENV_FILE = path.resolve(__dirname, '../.env');
 
@@ -117,7 +117,7 @@ app.post('/api/config', (req, res) => {
 // 1. 获取所有项目
 app.get('/api/projects', (req, res) => {
   try {
-    const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
+    const config = db.getProjectsForConfig();
     res.json(config);
   } catch (error) {
     res.status(500).json({ error: '读取项目配置失败', message: error.message });
@@ -128,23 +128,27 @@ app.get('/api/projects', (req, res) => {
 app.get('/api/projects/:name/status', async (req, res) => {
   try {
     const { name } = req.params;
-    const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-
-    // 查找项目（可能在 projects 或 external 中）
-    let project = config.projects[name];
-    if (!project && config.external && config.external[name]) {
-      project = config.external[name];
-    }
+    const project = db.getProjectByName(name);
 
     if (!project) {
       return res.status(404).json({ error: '项目不存在' });
     }
 
+    // 转换数据库格式到前端格式
+    const projectData = {
+      path: project.path,
+      description: project.description,
+      status: project.status,
+      port: project.port,
+      stack: project.tech ? JSON.parse(project.tech) : [],
+      startCommand: project.start_command
+    };
+
     // 如果是绝对路径直接使用，否则相对于项目根目录
     const projectPath = path.isAbsolute(project.path)
       ? project.path
       : path.join(PROJECT_ROOT, project.path);
-    const status = await checkProjectStatus(projectPath, project);
+    const status = await checkProjectStatus(projectPath, projectData);
 
     res.json({ name, ...status });
   } catch (error) {
@@ -156,22 +160,27 @@ app.get('/api/projects/:name/status', async (req, res) => {
 app.post('/api/projects/status/batch', async (req, res) => {
   try {
     const { projectNames } = req.body;
-    const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
 
     const statusPromises = projectNames.map(async (name) => {
-      // 查找项目（可能在 projects 或 external 中）
-      let project = config.projects[name];
-      if (!project && config.external && config.external[name]) {
-        project = config.external[name];
-      }
+      const project = db.getProjectByName(name);
 
       if (!project) return { name, error: '项目不存在' };
+
+      // 转换数据库格式
+      const projectData = {
+        path: project.path,
+        description: project.description,
+        status: project.status,
+        port: project.port,
+        stack: project.tech ? JSON.parse(project.tech) : [],
+        startCommand: project.start_command
+      };
 
       // 如果是绝对路径直接使用，否则相对于项目根目录
       const projectPath = path.isAbsolute(project.path)
         ? project.path
         : path.join(PROJECT_ROOT, project.path);
-      const status = await checkProjectStatus(projectPath, project);
+      const status = await checkProjectStatus(projectPath, projectData);
       return { name, ...status };
     });
 
@@ -182,15 +191,13 @@ app.post('/api/projects/status/batch', async (req, res) => {
   }
 });
 
-// 4. 更新项目配置
+// 4. 更新项目配置（已废弃 - 请使用 PUT /api/projects/:name）
 app.put('/api/projects', (req, res) => {
-  try {
-    const newConfig = req.body;
-    fs.writeFileSync(PROJECTS_CONFIG, JSON.stringify(newConfig, null, 2), 'utf8');
-    res.json({ success: true, message: '配置更新成功' });
-  } catch (error) {
-    res.status(500).json({ error: '更新配置失败', message: error.message });
-  }
+  res.status(410).json({
+    error: '此端点已废弃',
+    message: '请使用 PUT /api/projects/:name 更新单个项目',
+    deprecated: true
+  });
 });
 
 // 5. 执行项目操作
@@ -199,23 +206,27 @@ app.post('/api/projects/:name/action', async (req, res) => {
     const { name } = req.params;
     const { action, params } = req.body;
 
-    const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-
-    // 查找项目（可能在 projects 或 external 中）
-    let project = config.projects[name];
-    if (!project && config.external && config.external[name]) {
-      project = config.external[name];
-    }
+    const project = db.getProjectByName(name);
 
     if (!project) {
       return res.status(404).json({ error: '项目不存在' });
     }
 
+    // 转换数据库格式
+    const projectData = {
+      path: project.path,
+      description: project.description,
+      status: project.status,
+      port: project.port,
+      stack: project.tech ? JSON.parse(project.tech) : [],
+      startCommand: project.start_command
+    };
+
     // 如果是绝对路径直接使用，否则相对于项目根目录
     const projectPath = path.isAbsolute(project.path)
       ? project.path
       : path.join(PROJECT_ROOT, project.path);
-    const result = await executeAction(action, projectPath, project, params);
+    const result = await executeAction(action, projectPath, projectData, params);
 
     res.json(result);
   } catch (error) {
@@ -311,46 +322,14 @@ app.post('/api/projects/:name', async (req, res) => {
     const { name } = req.params;
     const { project, isExternal } = req.body;
 
-    const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-
     // 检查项目是否已存在
-    if (config.projects[name] || (config.external && config.external[name])) {
+    const existing = db.getProjectByName(name);
+    if (existing) {
       return res.status(400).json({ error: '项目名称已存在' });
     }
 
-    // 添加到相应的分类
-    if (isExternal) {
-      if (!config.external) config.external = {};
-      config.external[name] = project;
-    } else {
-      config.projects[name] = project;
-    }
-
-    // 更新 active/archived 数组
-    if (project.status === 'active') {
-      if (!config.active) config.active = [];
-      if (!config.active.includes(name)) {
-        config.active.push(name);
-      }
-    } else if (project.status === 'archived') {
-      if (!config.archived) config.archived = [];
-      if (!config.archived.includes(name)) {
-        config.archived.push(name);
-      }
-    }
-
-    // 更新元数据
-    if (config.meta) {
-      config.meta.totalProjects = (config.meta.totalProjects || 0) + 1;
-      if (project.status === 'active') {
-        config.meta.activeProjects = (config.meta.activeProjects || 0) + 1;
-      }
-    }
-
-    fs.writeFileSync(PROJECTS_CONFIG, JSON.stringify(config, null, 2), 'utf8');
-
-    // 同步到数据库
-    db.syncProjectsFromConfig(config);
+    // 添加到数据库
+    db.addProject(name, project, isExternal);
 
     // 自动触发项目分析（异步）
     const projectPath = isExternal ? project.path : path.join(PROJECT_ROOT, project.path);
@@ -382,55 +361,14 @@ app.put('/api/projects/:name', async (req, res) => {
     const { name } = req.params;
     const { project, isExternal } = req.body;
 
-    const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-
-    // 查找项目
-    let oldProject = config.projects[name];
-    let wasExternal = false;
-    if (!oldProject && config.external && config.external[name]) {
-      oldProject = config.external[name];
-      wasExternal = true;
-    }
-
-    if (!oldProject) {
+    // 检查项目是否存在
+    const existing = db.getProjectByName(name);
+    if (!existing) {
       return res.status(404).json({ error: '项目不存在' });
     }
 
-    // 删除旧位置
-    if (wasExternal) {
-      delete config.external[name];
-    } else {
-      delete config.projects[name];
-    }
-
-    // 添加到新位置
-    if (isExternal) {
-      if (!config.external) config.external = {};
-      config.external[name] = project;
-    } else {
-      config.projects[name] = project;
-    }
-
-    // 更新 active/archived 数组
-    if (config.active) {
-      config.active = config.active.filter(n => n !== name);
-    }
-    if (config.archived) {
-      config.archived = config.archived.filter(n => n !== name);
-    }
-
-    if (project.status === 'active') {
-      if (!config.active) config.active = [];
-      config.active.push(name);
-    } else if (project.status === 'archived') {
-      if (!config.archived) config.archived = [];
-      config.archived.push(name);
-    }
-
-    fs.writeFileSync(PROJECTS_CONFIG, JSON.stringify(config, null, 2), 'utf8');
-
-    // 同步到数据库
-    db.syncProjectsFromConfig(config);
+    // 更新数据库
+    db.updateProject(name, project, isExternal);
 
     res.json({ success: true, message: '项目更新成功' });
   } catch (error) {
@@ -443,42 +381,14 @@ app.delete('/api/projects/:name', (req, res) => {
   try {
     const { name } = req.params;
 
-    const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-
-    // 查找项目
-    let found = false;
-    if (config.projects[name]) {
-      delete config.projects[name];
-      found = true;
-    } else if (config.external && config.external[name]) {
-      delete config.external[name];
-      found = true;
-    }
-
-    if (!found) {
+    // 检查项目是否存在
+    const existing = db.getProjectByName(name);
+    if (!existing) {
       return res.status(404).json({ error: '项目不存在' });
     }
 
-    // 从 active/archived 数组中移除
-    if (config.active) {
-      config.active = config.active.filter(n => n !== name);
-    }
-    if (config.archived) {
-      config.archived = config.archived.filter(n => n !== name);
-    }
-
-    // 更新元数据
-    if (config.meta) {
-      config.meta.totalProjects = Math.max(0, (config.meta.totalProjects || 0) - 1);
-      if (config.active) {
-        config.meta.activeProjects = config.active.length;
-      }
-    }
-
-    fs.writeFileSync(PROJECTS_CONFIG, JSON.stringify(config, null, 2), 'utf8');
-
-    // 同步到数据库
-    db.syncProjectsFromConfig(config);
+    // 从数据库删除
+    db.deleteProject(name);
 
     res.json({ success: true, message: '项目删除成功' });
   } catch (error) {
@@ -708,6 +618,32 @@ async function identifyTechStack(projectPath) {
 
   return Array.from(stack);
 }
+
+// ========== 数据导出 API ==========
+
+// 导出项目配置到 JSON 格式
+app.get('/api/projects/export', (req, res) => {
+  try {
+    const config = db.getProjectsForConfig();
+    res.json(config);
+  } catch (error) {
+    res.status(500).json({ error: '导出配置失败', message: error.message });
+  }
+});
+
+// 下载项目配置为 JSON 文件
+app.get('/api/projects/export/download', (req, res) => {
+  try {
+    const config = db.getProjectsForConfig();
+    const filename = `projects-backup-${new Date().toISOString().split('T')[0]}.json`;
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(JSON.stringify(config, null, 2));
+  } catch (error) {
+    res.status(500).json({ error: '下载配置失败', message: error.message });
+  }
+});
 
 // 注册进程管理路由
 registerProcessRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG, fs);

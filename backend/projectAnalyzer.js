@@ -85,7 +85,13 @@ class ProjectAnalyzer {
       dependencies: {},
       file_count: 0,
       loc: 0,
-      readme_summary: null
+      readme_summary: null,
+      // 新增字段
+      start_command: null,
+      port: null,
+      scripts: {},
+      environment_files: [],
+      config_files: []
     };
 
     try {
@@ -105,6 +111,16 @@ class ProjectAnalyzer {
 
       // 读取 README 摘要
       result.readme_summary = this.extractReadmeSummary(projectPath);
+
+      // 检测启动命令和脚本
+      const startInfo = this.detectStartCommand(projectPath, result.framework);
+      result.start_command = startInfo.command;
+      result.port = startInfo.port;
+      result.scripts = startInfo.scripts;
+
+      // 检测配置文件
+      result.environment_files = this.detectEnvironmentFiles(projectPath);
+      result.config_files = this.detectConfigFiles(projectPath);
 
     } catch (error) {
       console.error('[ProjectAnalyzer] ⚠️  静态分析部分失败:', error);
@@ -432,6 +448,199 @@ class ProjectAnalyzer {
     }
 
     return null;
+  }
+
+  /**
+   * 检测启动命令
+   */
+  detectStartCommand(projectPath, framework) {
+    const result = {
+      command: null,
+      port: null,
+      scripts: {}
+    };
+
+    // 1. 优先检查 package.json (Node.js 项目)
+    const packageJsonPath = path.join(projectPath, 'package.json');
+    if (fs.existsSync(packageJsonPath)) {
+      try {
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        const scripts = packageJson.scripts || {};
+        result.scripts = scripts;
+
+        // 检测启动命令优先级
+        if (scripts.dev) {
+          result.command = 'npm run dev';
+        } else if (scripts.start) {
+          result.command = 'npm start';
+        } else if (scripts.serve) {
+          result.command = 'npm run serve';
+        }
+
+        // 尝试从脚本中提取端口
+        const portMatch = JSON.stringify(scripts).match(/--port[=\s]+(\d+)|PORT[=\s]+(\d+)|:\s*(\d{4,5})/);
+        if (portMatch) {
+          result.port = parseInt(portMatch[1] || portMatch[2] || portMatch[3]);
+        }
+      } catch (error) {
+        console.error('[ProjectAnalyzer] ⚠️  读取 package.json 失败:', error);
+      }
+    }
+
+    // 2. 检查 Python 项目
+    if (framework && framework.includes('Python')) {
+      const mainFiles = ['app.py', 'main.py', 'manage.py', 'run.py'];
+      for (const file of mainFiles) {
+        if (fs.existsSync(path.join(projectPath, file))) {
+          if (framework === 'Django') {
+            result.command = 'python manage.py runserver';
+            result.port = 8000;
+          } else if (framework === 'Flask') {
+            result.command = `python ${file}`;
+            result.port = 5000;
+          } else if (framework === 'FastAPI') {
+            result.command = `uvicorn ${file.replace('.py', '')}:app --reload`;
+            result.port = 8000;
+          } else {
+            result.command = `python ${file}`;
+          }
+          break;
+        }
+      }
+    }
+
+    // 3. 检查 Go 项目
+    if (framework === 'Go') {
+      result.command = 'go run .';
+      const mainGoPath = path.join(projectPath, 'main.go');
+      if (fs.existsSync(mainGoPath)) {
+        try {
+          const content = fs.readFileSync(mainGoPath, 'utf8');
+          const portMatch = content.match(/:\s*(\d{4,5})/);
+          if (portMatch) {
+            result.port = parseInt(portMatch[1]);
+          }
+        } catch (error) {
+          // 忽略错误
+        }
+      }
+    }
+
+    // 4. 检查 Rust 项目
+    if (framework === 'Rust') {
+      result.command = 'cargo run';
+    }
+
+    // 5. 检查 Makefile
+    const makefilePath = path.join(projectPath, 'Makefile');
+    if (fs.existsSync(makefilePath) && !result.command) {
+      try {
+        const content = fs.readFileSync(makefilePath, 'utf8');
+        if (content.includes('run:') || content.includes('start:')) {
+          result.command = 'make run';
+        } else if (content.includes('dev:')) {
+          result.command = 'make dev';
+        }
+      } catch (error) {
+        // 忽略错误
+      }
+    }
+
+    // 6. 尝试从环境文件中检测端口
+    if (!result.port) {
+      const envPort = this.detectPortFromEnv(projectPath);
+      if (envPort) {
+        result.port = envPort;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * 从环境文件中检测端口
+   */
+  detectPortFromEnv(projectPath) {
+    const envFiles = ['.env', '.env.local', '.env.development'];
+
+    for (const envFile of envFiles) {
+      const envPath = path.join(projectPath, envFile);
+      if (fs.existsSync(envPath)) {
+        try {
+          const content = fs.readFileSync(envPath, 'utf8');
+          const portMatch = content.match(/PORT\s*=\s*(\d+)/i);
+          if (portMatch) {
+            return parseInt(portMatch[1]);
+          }
+        } catch (error) {
+          // 忽略错误
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * 检测环境文件
+   */
+  detectEnvironmentFiles(projectPath) {
+    const envFiles = [];
+    const possibleEnvFiles = [
+      '.env',
+      '.env.local',
+      '.env.development',
+      '.env.production',
+      '.env.test',
+      '.env.example',
+      'config.json',
+      'config.yml',
+      'config.yaml'
+    ];
+
+    for (const file of possibleEnvFiles) {
+      if (fs.existsSync(path.join(projectPath, file))) {
+        envFiles.push(file);
+      }
+    }
+
+    return envFiles;
+  }
+
+  /**
+   * 检测配置文件
+   */
+  detectConfigFiles(projectPath) {
+    const configFiles = [];
+    const possibleConfigs = [
+      'vite.config.js',
+      'vite.config.ts',
+      'webpack.config.js',
+      'rollup.config.js',
+      'tsconfig.json',
+      'babel.config.js',
+      '.babelrc',
+      'tailwind.config.js',
+      'postcss.config.js',
+      'next.config.js',
+      'nuxt.config.js',
+      'vue.config.js',
+      'angular.json',
+      'nest-cli.json',
+      'Cargo.toml',
+      'go.mod',
+      'requirements.txt',
+      'Pipfile',
+      'pyproject.toml'
+    ];
+
+    for (const file of possibleConfigs) {
+      if (fs.existsSync(path.join(projectPath, file))) {
+        configFiles.push(file);
+      }
+    }
+
+    return configFiles;
   }
 }
 

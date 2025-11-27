@@ -53,33 +53,13 @@ function registerAnalysisRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG) {
     try {
       const { force = false } = req.body;
 
-      // 读取项目配置
-      if (!fs.existsSync(PROJECTS_CONFIG)) {
-        return res.status(404).json({
-          success: false,
-          error: '项目配置文件不存在'
-        });
-      }
-
-      const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-      const allProjects = [];
-
-      // 收集所有项目
-      for (const [name, project] of Object.entries(config.projects || {})) {
-        allProjects.push({
-          name,
-          path: path.join(PROJECT_ROOT, project.path),
-          isExternal: false
-        });
-      }
-
-      for (const [name, project] of Object.entries(config.external || {})) {
-        allProjects.push({
-          name,
-          path: project.path,
-          isExternal: true
-        });
-      }
+      // 从数据库获取所有项目
+      const projects = db.getAllProjects();
+      const allProjects = projects.map(p => ({
+        name: p.name,
+        path: p.is_external ? p.path : path.join(PROJECT_ROOT, p.path),
+        isExternal: p.is_external === 1
+      }));
 
       // 过滤需要分析的项目
       let projectsToAnalyze = allProjects;
@@ -147,37 +127,20 @@ function registerAnalysisRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG) {
       const { name } = req.params;
       const { force = false } = req.body;
 
-      // 读取项目配置
-      if (!fs.existsSync(PROJECTS_CONFIG)) {
-        return res.status(404).json({
-          success: false,
-          error: '项目配置文件不存在'
-        });
-      }
+      // 从数据库获取项目
+      const project = db.getProjectByName(name);
 
-      const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-
-      // 查找项目
-      let projectConfig = null;
-      let projectPath = null;
-      let isExternal = false;
-
-      if (config.projects && config.projects[name]) {
-        projectConfig = config.projects[name];
-        projectPath = path.join(PROJECT_ROOT, projectConfig.path);
-        isExternal = false;
-      } else if (config.external && config.external[name]) {
-        projectConfig = config.external[name];
-        projectPath = projectConfig.path;
-        isExternal = true;
-      }
-
-      if (!projectConfig) {
+      if (!project) {
         return res.status(404).json({
           success: false,
           error: '项目不存在'
         });
       }
+
+      // 确定项目路径
+      const projectPath = project.is_external
+        ? project.path
+        : path.join(PROJECT_ROOT, project.path);
 
       // 检查是否已分析
       if (!force) {
@@ -251,6 +214,96 @@ function registerAnalysisRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG) {
       res.status(500).json({
         success: false,
         error: '获取项目分析结果失败',
+        message: error.message
+      });
+    }
+  });
+
+  /**
+   * 应用分析结果到项目配置
+   * POST /api/projects/:name/apply-analysis
+   * Body: { fields: ['port', 'start_command', ...] } - 要应用的字段
+   */
+  app.post('/api/projects/:name/apply-analysis', (req, res) => {
+    try {
+      const { name } = req.params;
+      const { fields = [] } = req.body;
+
+      // 获取分析结果
+      const analysis = db.getProjectAnalysis(name);
+      if (!analysis || !analysis.analyzed) {
+        return res.status(404).json({
+          success: false,
+          error: '项目未分析或分析失败'
+        });
+      }
+
+      // 读取 projects.json
+      if (!fs.existsSync(PROJECTS_CONFIG)) {
+        return res.status(500).json({
+          success: false,
+          error: '配置文件不存在'
+        });
+      }
+
+      const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
+
+      // 查找项目配置
+      let projectConfig = null;
+      let projectLocation = null;
+
+      if (config.projects && config.projects[name]) {
+        projectConfig = config.projects[name];
+        projectLocation = 'projects';
+      } else if (config.external && config.external[name]) {
+        projectConfig = config.external[name];
+        projectLocation = 'external';
+      }
+
+      if (!projectConfig) {
+        return res.status(404).json({
+          success: false,
+          error: '项目在配置文件中不存在'
+        });
+      }
+
+      // 应用分析结果
+      const updates = {};
+      if (fields.includes('port') && analysis.port) {
+        projectConfig.port = analysis.port;
+        updates.port = analysis.port;
+      }
+      if (fields.includes('start_command') && analysis.start_command) {
+        projectConfig.startCommand = analysis.start_command;
+        updates.startCommand = analysis.start_command;
+      }
+      if (fields.includes('framework') && analysis.framework) {
+        if (!projectConfig.stack) projectConfig.stack = [];
+        if (!projectConfig.stack.includes(analysis.framework)) {
+          projectConfig.stack.push(analysis.framework);
+        }
+        updates.framework = analysis.framework;
+      }
+
+      // 保存配置
+      fs.writeFileSync(PROJECTS_CONFIG, JSON.stringify(config, null, 2), 'utf8');
+
+      // 同步到数据库
+      db.syncProjectFromConfig(name, projectConfig, projectLocation === 'external');
+
+      console.log(`[AnalysisRoutes] ✅ 应用分析结果: ${name}`, updates);
+
+      res.json({
+        success: true,
+        message: '分析结果已应用到项目配置',
+        data: { updates }
+      });
+
+    } catch (error) {
+      console.error(`[AnalysisRoutes] 应用分析结果失败:`, error);
+      res.status(500).json({
+        success: false,
+        error: '应用分析结果失败',
         message: error.message
       });
     }

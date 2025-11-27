@@ -5,6 +5,10 @@ import { fetchProjects, fetchBatchStatus, batchOperation, analyzeAllProjects, ge
 import ProjectCard from './components/ProjectCard';
 import Settings from './components/Settings';
 import ProjectConfigDialog from './components/ProjectConfigDialog';
+import ProjectDetailPage from './components/ProjectDetailPage';
+import { TodoManager } from './components/TodoManager';
+import LogViewer from './components/LogViewer';
+import AiDialog from './components/AiDialog';
 
 export default function App() {
   const [config, setConfig] = useState<ProjectsConfig | null>(null);
@@ -20,10 +24,35 @@ export default function App() {
   const [showProjectConfig, setShowProjectConfig] = useState(false);
   const [projectConfigMode, setProjectConfigMode] = useState<'add' | 'edit'>('add');
   const [editingProject, setEditingProject] = useState<{ name: string; project: any } | null>(null);
+  const [detailProjectName, setDetailProjectName] = useState<string | null>(null);
+  const [showTodoManager, setShowTodoManager] = useState<string | null>(null);
+  const [showLogViewer, setShowLogViewer] = useState<string | null>(null);
+  const [showAiDialog, setShowAiDialog] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
     loadAnalysisStats();
+
+    // 监听从 ProjectDetailPage 发出的事件
+    const handleOpenTodoManager = (e: CustomEvent) => {
+      setShowTodoManager(e.detail.projectName);
+    };
+    const handleOpenLogViewer = (e: CustomEvent) => {
+      setShowLogViewer(e.detail.projectName);
+    };
+    const handleOpenAiDialog = (e: CustomEvent) => {
+      setShowAiDialog(e.detail.projectName);
+    };
+
+    window.addEventListener('openTodoManager' as any, handleOpenTodoManager as any);
+    window.addEventListener('openLogViewer' as any, handleOpenLogViewer as any);
+    window.addEventListener('openAiDialog' as any, handleOpenAiDialog as any);
+
+    return () => {
+      window.removeEventListener('openTodoManager' as any, handleOpenTodoManager as any);
+      window.removeEventListener('openLogViewer' as any, handleOpenLogViewer as any);
+      window.removeEventListener('openAiDialog' as any, handleOpenAiDialog as any);
+    };
   }, []);
 
   const loadData = async () => {
@@ -437,6 +466,7 @@ export default function App() {
                 project={project}
                 status={statuses.get(name)}
                 onAction={loadData}
+                onOpenDetail={(projectName) => setDetailProjectName(projectName)}
                 selectionMode={selectionMode}
                 isSelected={selectedProjects.has(name)}
                 onSelect={() => toggleProjectSelection(name)}
@@ -474,6 +504,41 @@ export default function App() {
             loadData();
             loadAnalysisStats();
           }}
+        />
+      )}
+
+      {/* Project Detail Page */}
+      {detailProjectName && config && (config.projects[detailProjectName] || config.external?.[detailProjectName]) && (
+        <ProjectDetailPage
+          name={detailProjectName}
+          project={config.projects[detailProjectName] || config.external?.[detailProjectName]}
+          status={statuses.get(detailProjectName)}
+          onClose={() => setDetailProjectName(null)}
+          onRefresh={loadData}
+        />
+      )}
+
+      {/* Todo Manager Dialog */}
+      {showTodoManager && (
+        <TodoManager
+          projectName={showTodoManager}
+          onClose={() => setShowTodoManager(null)}
+        />
+      )}
+
+      {/* Log Viewer Dialog */}
+      {showLogViewer && (
+        <LogViewer
+          projectName={showLogViewer}
+          onClose={() => setShowLogViewer(null)}
+        />
+      )}
+
+      {/* AI Dialog */}
+      {showAiDialog && (
+        <AiDialog
+          projectName={showAiDialog}
+          onClose={() => setShowAiDialog(null)}
         />
       )}
     </div>

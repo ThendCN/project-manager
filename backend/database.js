@@ -45,7 +45,7 @@ class DatabaseManager {
   }
 
   /**
-   * 执行 SQL 模式文件
+   * 执行 SQL 模式文件和迁移
    */
   runSchema() {
     if (!fs.existsSync(SCHEMA_PATH)) {
@@ -55,6 +55,82 @@ class DatabaseManager {
 
     const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
     this.db.exec(schema);
+
+    // 执行数据库迁移
+    this.runMigrations();
+  }
+
+  /**
+   * 数据库迁移管理
+   * 使用 user_version 跟踪数据库版本
+   */
+  runMigrations() {
+    const currentVersion = this.db.pragma('user_version', { simple: true });
+    const targetVersion = 1; // 当前目标版本
+
+    console.log(`📦 数据库版本: ${currentVersion} → ${targetVersion}`);
+
+    if (currentVersion < targetVersion) {
+      console.log('🔄 开始数据库迁移...');
+
+      // 迁移到版本 1: 添加项目分析字段
+      if (currentVersion < 1) {
+        this.migrateToV1();
+      }
+
+      // 更新数据库版本
+      this.db.pragma(`user_version = ${targetVersion}`);
+      console.log('✅ 数据库迁移完成');
+    }
+  }
+
+  /**
+   * 迁移到版本 1: 添加项目分析相关字段
+   */
+  migrateToV1() {
+    console.log('  ➤ 迁移到版本 1: 添加项目分析字段');
+
+    try {
+      // 检查是否已存在 analyzed 列
+      const columns = this.db.pragma('table_info(projects)');
+      const hasAnalyzedColumn = columns.some(col => col.name === 'analyzed');
+
+      if (!hasAnalyzedColumn) {
+        // 添加新列
+        const alterStatements = [
+          'ALTER TABLE projects ADD COLUMN analyzed BOOLEAN DEFAULT 0',
+          'ALTER TABLE projects ADD COLUMN analyzed_at DATETIME',
+          'ALTER TABLE projects ADD COLUMN analysis_status TEXT DEFAULT "pending"',
+          'ALTER TABLE projects ADD COLUMN framework TEXT',
+          'ALTER TABLE projects ADD COLUMN languages TEXT',
+          'ALTER TABLE projects ADD COLUMN dependencies TEXT',
+          'ALTER TABLE projects ADD COLUMN file_count INTEGER DEFAULT 0',
+          'ALTER TABLE projects ADD COLUMN loc INTEGER DEFAULT 0',
+          'ALTER TABLE projects ADD COLUMN readme_summary TEXT',
+          'ALTER TABLE projects ADD COLUMN architecture_notes TEXT',
+          'ALTER TABLE projects ADD COLUMN main_features TEXT',
+          'ALTER TABLE projects ADD COLUMN analysis_error TEXT'
+        ];
+
+        for (const statement of alterStatements) {
+          try {
+            this.db.exec(statement);
+          } catch (err) {
+            // 忽略列已存在的错误
+            if (!err.message.includes('duplicate column')) {
+              throw err;
+            }
+          }
+        }
+
+        console.log('  ✓ 已添加项目分析字段');
+      } else {
+        console.log('  ✓ 项目分析字段已存在,跳过迁移');
+      }
+    } catch (error) {
+      console.error('  ✗ 迁移失败:', error.message);
+      throw error;
+    }
   }
 
   /**
@@ -108,6 +184,131 @@ class DatabaseManager {
    */
   getAllProjects() {
     return this.db.prepare('SELECT * FROM projects ORDER BY name').all();
+  }
+
+  /**
+   * 获取单个项目
+   */
+  getProjectByName(name) {
+    return this.db.prepare('SELECT * FROM projects WHERE name = ?').get(name);
+  }
+
+  /**
+   * 获取活跃项目
+   */
+  getActiveProjects() {
+    return this.db.prepare('SELECT * FROM projects WHERE status = "active" ORDER BY name').all();
+  }
+
+  /**
+   * 获取归档项目
+   */
+  getArchivedProjects() {
+    return this.db.prepare('SELECT * FROM projects WHERE status = "archived" ORDER BY name').all();
+  }
+
+  /**
+   * 以 projects.json 格式获取所有项目（用于导出）
+   */
+  getProjectsForConfig() {
+    const projects = this.getAllProjects();
+    const config = {
+      projects: {},
+      external: {},
+      active: [],
+      archived: [],
+      meta: {
+        totalProjects: projects.length,
+        activeProjects: 0,
+        lastSync: new Date().toISOString()
+      }
+    };
+
+    projects.forEach(p => {
+      const projectData = {
+        path: p.path,
+        description: p.description || '',
+        status: p.status,
+        port: p.port || undefined,
+        stack: p.tech ? JSON.parse(p.tech) : [],
+        startCommand: p.start_command || undefined
+      };
+
+      // 分类到 projects 或 external
+      if (p.is_external) {
+        config.external[p.name] = projectData;
+      } else {
+        config.projects[p.name] = projectData;
+      }
+
+      // 添加到 active/archived 列表
+      if (p.status === 'active') {
+        config.active.push(p.name);
+        config.meta.activeProjects++;
+      } else if (p.status === 'archived') {
+        config.archived.push(p.name);
+      }
+    });
+
+    return config;
+  }
+
+  /**
+   * 添加项目
+   */
+  addProject(name, project, isExternal = false) {
+    const stmt = this.db.prepare(`
+      INSERT INTO projects
+      (name, path, tech, status, port, description, start_command, is_external)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    return stmt.run(
+      name,
+      project.path,
+      JSON.stringify(project.stack || project.tech || []),
+      project.status || 'active',
+      project.port || null,
+      project.description || '',
+      project.startCommand || null,
+      isExternal ? 1 : 0
+    );
+  }
+
+  /**
+   * 更新项目
+   */
+  updateProject(name, project, isExternal = false) {
+    const stmt = this.db.prepare(`
+      UPDATE projects
+      SET path = ?,
+          tech = ?,
+          status = ?,
+          port = ?,
+          description = ?,
+          start_command = ?,
+          is_external = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE name = ?
+    `);
+
+    return stmt.run(
+      project.path,
+      JSON.stringify(project.stack || project.tech || []),
+      project.status || 'active',
+      project.port || null,
+      project.description || '',
+      project.startCommand || null,
+      isExternal ? 1 : 0,
+      name
+    );
+  }
+
+  /**
+   * 删除项目
+   */
+  deleteProject(name) {
+    return this.db.prepare('DELETE FROM projects WHERE name = ?').run(name);
   }
 
   /**

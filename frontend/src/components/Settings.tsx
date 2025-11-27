@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, RefreshCw, ExternalLink, Info } from 'lucide-react';
+import { Settings as SettingsIcon, Save, RefreshCw, ExternalLink, Info, Download, FolderOpen } from 'lucide-react';
 
 interface AppConfig {
   ANTHROPIC_API_KEY: string;
@@ -15,6 +15,8 @@ export default function Settings({ onClose }: { onClose: () => void }) {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [selectingFolder, setSelectingFolder] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -62,6 +64,61 @@ export default function Settings({ onClose }: { onClose: () => void }) {
 
   const handleChange = (field: keyof AppConfig, value: string) => {
     setConfig(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleExportConfig = async () => {
+    setExporting(true);
+    try {
+      const response = await fetch('http://localhost:9999/api/projects/export/download');
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `projects-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        setMessage({ type: 'success', text: '配置导出成功！' });
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        setMessage({ type: 'error', text: '导出失败' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: '导出配置失败' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleSelectFolder = async () => {
+    setSelectingFolder(true);
+    setMessage(null);
+    try {
+      const response = await fetch('http://localhost:9999/api/select-folder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.path) {
+          setConfig(prev => ({ ...prev, PROJECT_ROOT: result.path }));
+          setMessage({ type: 'success', text: '文件夹选择成功！' });
+          setTimeout(() => setMessage(null), 3000);
+        } else {
+          setMessage({ type: 'error', text: result.message || '未选择文件夹' });
+        }
+      } else {
+        const error = await response.json();
+        setMessage({ type: 'error', text: error.message || '选择失败' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: '选择文件夹失败' });
+    } finally {
+      setSelectingFolder(false);
+    }
   };
 
   if (loading) {
@@ -268,20 +325,44 @@ export default function Settings({ onClose }: { onClose: () => void }) {
               }}>
                 项目根目录
               </label>
-              <input
-                type="text"
-                value={config.PROJECT_ROOT}
-                onChange={(e) => handleChange('PROJECT_ROOT', e.target.value)}
-                placeholder="/Users/username/Projects"
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  fontFamily: 'monospace'
-                }}
-              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  value={config.PROJECT_ROOT}
+                  onChange={(e) => handleChange('PROJECT_ROOT', e.target.value)}
+                  placeholder="/Users/username/Projects"
+                  style={{
+                    flex: 1,
+                    padding: '10px 12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontFamily: 'monospace'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleSelectFolder}
+                  disabled={selectingFolder}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '10px 16px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    background: selectingFolder ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: selectingFolder ? 'not-allowed' : 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <FolderOpen size={16} />
+                  {selectingFolder ? '选择中...' : '选择'}
+                </button>
+              </div>
               <div style={{
                 marginTop: '8px',
                 fontSize: '13px',
@@ -312,11 +393,15 @@ export default function Settings({ onClose }: { onClose: () => void }) {
             marginTop: '32px',
             display: 'flex',
             gap: '12px',
-            justifyContent: 'flex-end'
+            justifyContent: 'space-between'
           }}>
             <button
-              onClick={onClose}
+              onClick={handleExportConfig}
+              disabled={exporting}
               style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
                 padding: '10px 20px',
                 border: '1px solid #d1d5db',
                 borderRadius: '6px',
@@ -324,40 +409,67 @@ export default function Settings({ onClose }: { onClose: () => void }) {
                 color: '#374151',
                 fontSize: '14px',
                 fontWeight: '500',
-                cursor: 'pointer'
+                cursor: exporting ? 'not-allowed' : 'pointer'
               }}
             >
-              取消
-            </button>
-            <button
-              onClick={saveConfig}
-              disabled={saving}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '6px',
-                background: saving ? '#9ca3af' : '#3b82f6',
-                color: 'white',
-                fontSize: '14px',
-                fontWeight: '500',
-                cursor: saving ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {saving ? (
+              {exporting ? (
                 <>
                   <RefreshCw size={16} className="animate-spin" />
-                  保存中...
+                  导出中...
                 </>
               ) : (
                 <>
-                  <Save size={16} />
-                  保存配置
+                  <Download size={16} />
+                  导出配置
                 </>
               )}
             </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={onClose}
+                style={{
+                  padding: '10px 20px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  background: 'white',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                取消
+              </button>
+              <button
+                onClick={saveConfig}
+                disabled={saving}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 20px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  background: saving ? '#9ca3af' : '#3b82f6',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: saving ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {saving ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    保存中...
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} />
+                    保存配置
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

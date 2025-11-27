@@ -127,23 +127,23 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+        return <CheckCircle2 style={{ width: '20px', height: '20px', color: '#10b981' }} />;
       case 'in_progress':
-        return <Clock className="w-5 h-5 text-blue-500" />;
+        return <Clock style={{ width: '20px', height: '20px', color: '#3b82f6' }} />;
       case 'cancelled':
-        return <X className="w-5 h-5 text-gray-400" />;
+        return <X style={{ width: '20px', height: '20px', color: '#9ca3af' }} />;
       default:
-        return <Circle className="w-5 h-5 text-gray-300" />;
+        return <Circle style={{ width: '20px', height: '20px', color: '#d1d5db' }} />;
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityStyle = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800 border-red-300';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
-      case 'medium': return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'low': return 'bg-gray-100 text-gray-800 border-gray-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      case 'urgent': return { background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5' };
+      case 'high': return { background: '#ffedd5', color: '#9a3412', border: '1px solid #fdba74' };
+      case 'medium': return { background: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd' };
+      case 'low': return { background: '#f3f4f6', color: '#1f2937', border: '1px solid #d1d5db' };
+      default: return { background: '#f3f4f6', color: '#1f2937', border: '1px solid #d1d5db' };
     }
   };
 
@@ -165,55 +165,115 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8">
-          <div className="text-center">加载中...</div>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 50
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '8px',
+          padding: '32px'
+        }}>
+          <div style={{ textAlign: 'center' }}>加载中...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col">
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 50,
+      padding: '16px'
+    }}>
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+        maxWidth: '1200px',
+        width: '100%',
+        maxHeight: '90vh',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
         {/* Header */}
-        <div className="border-b p-6">
-          <div className="flex items-center justify-between">
+        <div style={{ borderBottom: '1px solid #e5e7eb', padding: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#111827', margin: 0 }}>
                 {projectName} - 任务管理
               </h2>
-              <div className="flex gap-4 mt-2 text-sm">
-                <span className="text-gray-600">总计: {stats.total}</span>
-                <span className="text-yellow-600">待处理: {stats.pending}</span>
-                <span className="text-blue-600">进行中: {stats.in_progress}</span>
-                <span className="text-green-600">已完成: {stats.completed}</span>
+              <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '14px' }}>
+                <span style={{ color: '#6b7280' }}>总计: {stats.total}</span>
+                <span style={{ color: '#d97706' }}>待处理: {stats.pending}</span>
+                <span style={{ color: '#3b82f6' }}>进行中: {stats.in_progress}</span>
+                <span style={{ color: '#10b981' }}>已完成: {stats.completed}</span>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              style={{
+                padding: '8px',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '9999px',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
-              <X className="w-6 h-6" />
+              <X style={{ width: '24px', height: '24px' }} />
             </button>
           </div>
         </div>
 
         {/* Filters & Actions */}
-        <div className="border-b p-4 bg-gray-50">
-          <div className="flex items-center gap-3 flex-wrap">
+        <div style={{ borderBottom: '1px solid #e5e7eb', padding: '16px', background: '#f9fafb' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <button
               onClick={() => setShowAddTodo(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                background: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#2563eb'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#3b82f6'}
             >
-              <Plus className="w-4 h-4" />
+              <Plus style={{ width: '16px', height: '16px' }} />
               新建任务
             </button>
 
             <select
               value={filter.status || ''}
               onChange={(e) => setFilter({ ...filter, status: e.target.value || undefined })}
-              className="px-3 py-2 border rounded-lg"
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                background: 'white'
+              }}
             >
               <option value="">所有状态</option>
               <option value="pending">待处理</option>
@@ -225,7 +285,13 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
             <select
               value={filter.priority || ''}
               onChange={(e) => setFilter({ ...filter, priority: e.target.value || undefined })}
-              className="px-3 py-2 border rounded-lg"
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                background: 'white'
+              }}
             >
               <option value="">所有优先级</option>
               <option value="urgent">紧急</option>
@@ -237,7 +303,13 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
             <select
               value={filter.type || ''}
               onChange={(e) => setFilter({ ...filter, type: e.target.value || undefined })}
-              className="px-3 py-2 border rounded-lg"
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                background: 'white'
+              }}
             >
               <option value="">所有类型</option>
               <option value="task">任务</option>
@@ -249,34 +321,61 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
         </div>
 
         {/* Todo List */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
           {todos.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <div style={{ textAlign: 'center', paddingTop: '48px', paddingBottom: '48px', color: '#6b7280' }}>
+              <AlertCircle style={{ width: '48px', height: '48px', margin: '0 auto 16px', color: '#9ca3af' }} />
               <p>暂无任务，点击"新建任务"开始吧！</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {todos.map((todo) => (
                 <div
                   key={todo.id}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white"
+                  style={{
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    background: 'white',
+                    transition: 'box-shadow 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
                 >
-                  <div className="flex items-start gap-3">
+                  <div style={{ display: 'flex', alignItems: 'start', gap: '12px' }}>
                     <button
                       onClick={() => toggleStatus(todo)}
-                      className="mt-1 hover:scale-110 transition-transform"
+                      style={{
+                        marginTop: '4px',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        transition: 'transform 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
                       {getStatusIcon(todo.status)}
                     </button>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-lg">{getTypeIcon(todo.type)}</span>
-                        <h3 className={`font-medium ${todo.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '18px' }}>{getTypeIcon(todo.type)}</span>
+                        <h3 style={{
+                          fontWeight: '500',
+                          margin: 0,
+                          textDecoration: todo.status === 'completed' ? 'line-through' : 'none',
+                          color: todo.status === 'completed' ? '#6b7280' : '#111827'
+                        }}>
                           {todo.title}
                         </h3>
-                        <span className={`px-2 py-1 text-xs rounded border ${getPriorityColor(todo.priority)}`}>
+                        <span style={{
+                          padding: '4px 8px',
+                          fontSize: '12px',
+                          borderRadius: '4px',
+                          ...getPriorityStyle(todo.priority)
+                        }}>
                           {todo.priority}
                         </span>
                         {todo.labels.map((label) => {
@@ -284,8 +383,10 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
                           return (
                             <span
                               key={label}
-                              className="px-2 py-1 text-xs rounded"
                               style={{
+                                padding: '4px 8px',
+                                fontSize: '12px',
+                                borderRadius: '4px',
                                 backgroundColor: labelObj?.color + '20',
                                 color: labelObj?.color || '#666'
                               }}
@@ -297,13 +398,13 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
                       </div>
 
                       {todo.description && (
-                        <p className="text-sm text-gray-600 mt-2">{todo.description}</p>
+                        <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '8px', marginBottom: 0 }}>{todo.description}</p>
                       )}
 
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '8px', fontSize: '12px', color: '#6b7280' }}>
                         {todo.due_date && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Calendar style={{ width: '12px', height: '12px' }} />
                             {new Date(todo.due_date).toLocaleDateString('zh-CN')}
                           </span>
                         )}
@@ -317,12 +418,22 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={() => deleteTodo(todo.id)}
-                        className="p-2 hover:bg-red-50 text-red-600 rounded transition-colors"
+                        style={{
+                          padding: '8px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#fef2f2'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 style={{ width: '16px', height: '16px' }} />
                       </button>
                     </div>
                   </div>
@@ -334,40 +445,74 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
 
         {/* Add Todo Dialog */}
         {showAddTodo && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
-              <h3 className="text-xl font-bold mb-4">新建任务</h3>
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '600px',
+              width: '100%'
+            }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '16px' }}>新建任务</h3>
 
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
-                  <label className="block text-sm font-medium mb-1">标题</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>标题</label>
                   <input
                     type="text"
                     value={newTodo.title}
                     onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px'
+                    }}
                     placeholder="输入任务标题"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">描述</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>描述</label>
                   <textarea
                     value={newTodo.description}
                     onChange={(e) => setNewTodo({ ...newTodo, description: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      resize: 'vertical'
+                    }}
                     rows={3}
                     placeholder="输入任务描述"
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                   <div>
-                    <label className="block text-sm font-medium mb-1">优先级</label>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>优先级</label>
                     <select
                       value={newTodo.priority}
                       onChange={(e) => setNewTodo({ ...newTodo, priority: e.target.value as any })}
-                      className="w-full px-3 py-2 border rounded-lg"
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        background: 'white'
+                      }}
                     >
                       <option value="low">低</option>
                       <option value="medium">中</option>
@@ -377,11 +522,18 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">类型</label>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>类型</label>
                     <select
                       value={newTodo.type}
                       onChange={(e) => setNewTodo({ ...newTodo, type: e.target.value as any })}
-                      className="w-full px-3 py-2 border rounded-lg"
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        background: 'white'
+                      }}
                     >
                       <option value="task">任务</option>
                       <option value="bug">Bug</option>
@@ -391,40 +543,82 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">预估工时 (小时)</label>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>预估工时</label>
                     <input
                       type="number"
                       value={newTodo.estimated_hours || ''}
                       onChange={(e) => setNewTodo({ ...newTodo, estimated_hours: parseFloat(e.target.value) || undefined })}
-                      className="w-full px-3 py-2 border rounded-lg"
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '14px'
+                      }}
                       min="0"
                       step="0.5"
+                      placeholder="小时"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">截止日期</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>截止日期</label>
                   <input
                     type="date"
                     value={newTodo.due_date}
                     onChange={(e) => setNewTodo({ ...newTodo, due_date: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px'
+                    }}
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                 <button
                   onClick={createTodo}
                   disabled={!newTodo.title}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    flex: 1,
+                    padding: '10px 16px',
+                    background: !newTodo.title ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: !newTodo.title ? 'not-allowed' : 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (newTodo.title) e.currentTarget.style.background = '#2563eb';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (newTodo.title) e.currentTarget.style.background = '#3b82f6';
+                  }}
                 >
                   创建
                 </button>
                 <button
                   onClick={() => setShowAddTodo(false)}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
+                  style={{
+                    padding: '10px 16px',
+                    background: 'white',
+                    color: '#374151',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
                 >
                   取消
                 </button>

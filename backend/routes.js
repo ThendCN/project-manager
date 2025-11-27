@@ -1,6 +1,7 @@
 const processManager = require('./processManager');
 const startupDetector = require('./startupDetector');
 const claudeCodeManager = require('./claudeCodeManager');
+const db = require('./database');
 const path = require('path');
 
 /**
@@ -11,23 +12,28 @@ function registerProcessRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG, fs) {
   app.get('/api/projects/:name/startup', (req, res) => {
     try {
       const { name } = req.params;
-      const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-
-      let project = config.projects[name];
-      if (!project && config.external && config.external[name]) {
-        project = config.external[name];
-      }
+      const project = db.getProjectByName(name);
 
       if (!project) {
         return res.status(404).json({ error: '项目不存在' });
       }
+
+      // 转换数据库格式
+      const projectData = {
+        path: project.path,
+        description: project.description,
+        status: project.status,
+        port: project.port,
+        stack: project.tech ? JSON.parse(project.tech) : [],
+        startCommand: project.start_command
+      };
 
       const projectPath = path.isAbsolute(project.path)
         ? project.path
         : path.join(PROJECT_ROOT, project.path);
 
       // 自动检测启动命令
-      const startup = startupDetector.detect(projectPath, project);
+      const startup = startupDetector.detect(projectPath, projectData);
 
       res.json({
         detected: startup,
@@ -43,16 +49,21 @@ function registerProcessRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG, fs) {
     try {
       const { name } = req.params;
       const { command: customCommand } = req.body;
-      const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-
-      let project = config.projects[name];
-      if (!project && config.external && config.external[name]) {
-        project = config.external[name];
-      }
+      const project = db.getProjectByName(name);
 
       if (!project) {
         return res.status(404).json({ error: '项目不存在' });
       }
+
+      // 转换数据库格式
+      const projectData = {
+        path: project.path,
+        description: project.description,
+        status: project.status,
+        port: project.port,
+        stack: project.tech ? JSON.parse(project.tech) : [],
+        startCommand: project.start_command
+      };
 
       const projectPath = path.isAbsolute(project.path)
         ? project.path
@@ -61,7 +72,7 @@ function registerProcessRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG, fs) {
       // 确定启动命令
       let command = customCommand;
       if (!command) {
-        const startup = startupDetector.detect(projectPath, project);
+        const startup = startupDetector.detect(projectPath, projectData);
         if (!startup) {
           return res.status(400).json({ error: '无法检测启动命令，请手动指定' });
         }
@@ -157,17 +168,27 @@ function registerProcessRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG, fs) {
       for (const name of projectNames) {
         try {
           if (action === 'start') {
-            const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-            let project = config.projects[name];
-            if (!project && config.external) {
-              project = config.external[name];
+            const project = db.getProjectByName(name);
+            if (!project) {
+              results.push({ name, success: false, error: '项目不存在' });
+              continue;
             }
+
+            // 转换数据库格式
+            const projectData = {
+              path: project.path,
+              description: project.description,
+              status: project.status,
+              port: project.port,
+              stack: project.tech ? JSON.parse(project.tech) : [],
+              startCommand: project.start_command
+            };
 
             const projectPath = path.isAbsolute(project.path)
               ? project.path
               : path.join(PROJECT_ROOT, project.path);
 
-            const startup = startupDetector.detect(projectPath, project);
+            const startup = startupDetector.detect(projectPath, projectData);
             if (startup) {
               processManager.start(name, startup.command, projectPath);
               results.push({ name, success: true });
@@ -181,15 +202,22 @@ function registerProcessRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG, fs) {
             processManager.stop(name);
             // 等待一秒后重启
             setTimeout(() => {
-              const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-              let project = config.projects[name];
-              if (!project && config.external) {
-                project = config.external[name];
-              }
+              const project = db.getProjectByName(name);
+              if (!project) return;
+
+              const projectData = {
+                path: project.path,
+                description: project.description,
+                status: project.status,
+                port: project.port,
+                stack: project.tech ? JSON.parse(project.tech) : [],
+                startCommand: project.start_command
+              };
+
               const projectPath = path.isAbsolute(project.path)
                 ? project.path
                 : path.join(PROJECT_ROOT, project.path);
-              const startup = startupDetector.detect(projectPath, project);
+              const startup = startupDetector.detect(projectPath, projectData);
               if (startup) {
                 processManager.start(name, startup.command, projectPath);
               }
@@ -224,11 +252,7 @@ function registerProcessRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG, fs) {
         return res.status(400).json({ error: '请提供任务描述' });
       }
 
-      const config = JSON.parse(fs.readFileSync(PROJECTS_CONFIG, 'utf8'));
-      let project = config.projects[name];
-      if (!project && config.external) {
-        project = config.external[name];
-      }
+      const project = db.getProjectByName(name);
 
       if (!project) {
         console.log(`[API] ❌ 项目不存在: ${name}`);
