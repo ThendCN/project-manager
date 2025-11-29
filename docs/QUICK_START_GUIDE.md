@@ -68,24 +68,42 @@ cp .env.example .env
 
 > 💡 **提示**: 可以只配置一个引擎，也可以同时配置多个自由切换！
 
-### Step 3: 添加第一个项目
+### Step 3: 创建第一个项目
 
-**编辑 `.claude/projects.json`**
-```json
-{
-  "projects": {
-    "my-first-project": {
-      "path": "../my-first-project",
-      "tech": ["React", "Node.js"],
-      "status": "active",
-      "port": 3000,
-      "description": "我的第一个项目"
-    }
-  }
-}
+CCMage 提供 **AI 一句话创建项目** 功能，让项目创建变得简单！
+
+**使用步骤：**
+1. 在主界面点击 **"✨ AI 创建项目"** 按钮（紫色渐变按钮）
+2. 在对话框中输入项目描述，例如：
+   ```
+   一个博客系统，使用 React 和 Node.js，支持文章管理和评论功能
+   ```
+3. **选择 AI 引擎**（Claude Code 或 Codex）
+4. （可选）点击"显示高级选项"进行配置：
+   - 项目名称（留空自动生成）
+   - 偏好技术栈
+   - 端口号
+   - 自动安装依赖 ✅
+   - 自动启动项目 ✅
+5. 点击 **"开始创建"** 按钮
+6. AI 自动完成：创建目录 → 生成代码 → 安装依赖 → 启动服务
+7. 创建成功后，项目会自动添加到列表中！
+
+**描述建议：**
+- ✅ 说明项目类型（博客、商城、管理系统等）
+- ✅ 指定技术栈（React、Vue、Python 等）
+- ✅ 列出核心功能（用户认证、数据管理等）
+- ✅ 描述越详细，生成的项目越符合需求
+
+**示例描述：**
+```
+一个 Todo 应用，使用 Vue 3 + TypeScript + Express，
+支持任务的增删改查、分类标签和优先级管理。
 ```
 
-**刷新浏览器** - 项目会自动出现在列表中！
+> 💡 **提示**: 也可以手动编辑 `.claude/projects.json` 添加已存在的项目，但推荐使用 AI 创建新项目！
+>
+> 详见 [AI 项目创建指南](AI_PROJECT_CREATION_GUIDE.md)
 
 ---
 
@@ -305,15 +323,35 @@ AI：当然，这是一段使用 bcrypt 的密码加密代码...
 3. 查看浏览器控制台错误信息
 4. 等待 30 秒超时后重试
 
-### Q6: 如何添加外部项目（绝对路径）？
+### Q6: AI 创建项目失败怎么办？
 
 **A:**
-在 `.claude/projects.json` 的 `external` 部分添加：
+1. 检查项目描述是否足够详细
+2. 检查 AI 引擎是否已配置（API Key 有效）
+3. 查看创建日志中的错误信息
+4. 检查磁盘空间是否充足
+5. 检查项目创建目录是否有写入权限
+6. 尝试切换不同的 AI 引擎
+7. 简化项目需求后重试
+
+### Q7: 如何添加已存在的项目？
+
+**A:**
+编辑 `.claude/projects.json` 文件：
 ```json
 {
+  "projects": {
+    "existing-project": {
+      "path": "../existing-project",  // 相对路径
+      "tech": ["React"],
+      "status": "active",
+      "port": 3000,
+      "description": "已存在的项目"
+    }
+  },
   "external": {
     "my-external-project": {
-      "path": "/Users/xxx/Projects/my-project",
+      "path": "/Users/xxx/Projects/my-project",  // 绝对路径
       "tech": ["Vue"],
       "status": "production",
       "port": 8080
@@ -322,7 +360,9 @@ AI：当然，这是一段使用 bcrypt 的密码加密代码...
 }
 ```
 
-### Q7: 如何卸载或停止服务？
+刷新浏览器即可看到添加的项目。
+
+### Q8: 如何卸载或停止服务？
 
 **A:**
 ```bash
@@ -334,40 +374,41 @@ cd ccmage
 rm -rf node_modules backend/node_modules frontend/node_modules
 ```
 
-### Q8: 支持哪些项目类型？
+### Q9: 支持哪些项目类型？
 
 **A:**
 - ✅ Node.js (React, Vue, Next.js, Express, Nest.js 等)
 - ✅ Python (Flask, Django, FastAPI 等)
-- ✅ Go, Rust（需手动配置启动命令）
+- ✅ Go, Rust（需手动配置启动命令或 AI 创建）
 - ✅ 静态网站（HTML/CSS/JS）
-- ✅ 自定义项目（手动配置 `startCommand`）
+- ✅ 自定义项目（手动配置 `startCommand` 或使用 AI 创建）
+
+**推荐**: 使用 AI 创建项目，会自动配置启动命令和项目结构！
 
 ---
 
 ## 🎯 最佳实践
 
-### 1. 项目组织
+### 1. 项目创建
 
-**推荐目录结构：**
-```
-~/Projects/                    # PROJECT_ROOT
-├── project-1/                 # 本地项目（相对路径）
-├── project-2/
-└── ccmage/                    # 本工具
-```
+**推荐：使用 AI 创建新项目** 🌟
+- ✅ 点击"✨ AI 创建项目"按钮
+- ✅ 输入详细的项目描述
+- ✅ 选择合适的 AI 引擎
+- ✅ 让 AI 自动生成项目结构和代码
 
-**配置示例：**
-```json
-{
-  "projects": {
-    "project-1": {
-      "path": "../project-1",  // 相对于 PROJECT_ROOT
-      "tech": ["React"],
-      "status": "active"
-    }
-  }
-}
+**手动添加已存在的项目：**
+- 编辑 `.claude/projects.json`
+- 配置项目路径（相对或绝对）
+- 刷新浏览器
+
+**目录组织建议：**
+```
+~/Projects/                    # 项目根目录
+├── ccmage/                    # 本工具
+├── ai-created-project-1/      # AI 创建的项目
+├── ai-created-project-2/
+└── existing-project/          # 已存在的项目
 ```
 
 ### 2. 任务管理技巧
@@ -428,18 +469,30 @@ rm -rf node_modules backend/node_modules frontend/node_modules
 
 ## 🎉 快速开始检查清单
 
+**基础设置**
 - [ ] 安装依赖：`npm run install:all`
-- [ ] 配置项目列表：`.claude/projects.json`
 - [ ] 启动服务：`npm run dev`
 - [ ] 打开浏览器：http://localhost:5173
-- [ ] （推荐）配置多引擎 AI：
+
+**AI 引擎配置（推荐）**
+- [ ] 配置多引擎 AI：
   - [ ] 设置 → ANTHROPIC_API_KEY（Claude Code）
   - [ ] 设置 → OPENAI_API_KEY（Codex）
-- [ ] 添加第一个项目到列表
+- [ ] 选择默认 AI 引擎
+
+**创建第一个项目**
+- [ ] 点击"✨ AI 创建项目"按钮
+- [ ] 输入详细的项目描述
+- [ ] 选择 AI 引擎（Claude Code 或 Codex）
+- [ ] 查看 AI 创建进度
+- [ ] 确认项目创建成功
+
+**体验 AI 任务管理**
 - [ ] 创建第一个任务
 - [ ] 尝试 AI 智能拆分任务
 - [ ] 使用 AI 协作助手
 - [ ] 尝试对话中切换 AI 引擎
+- [ ] 更新任务状态
 
 ---
 
