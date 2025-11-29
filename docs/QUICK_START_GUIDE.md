@@ -37,22 +37,36 @@ npm run dev
 # 访问 http://localhost:5173
 ```
 
-### Step 2: 配置 AI 功能（可选）
+### Step 2: 配置 AI 引擎（可选，推荐）
+
+CCMage 支持**多引擎 AI**，你可以自由选择和切换：
+- ✅ **Claude Code** - Anthropic Claude Agent SDK，强大的代码理解和生成
+- ✅ **Codex** - OpenAI Codex SDK，专注代码补全和解释
+- 🔜 **Gemini** - Google Gemini（即将支持）
 
 **方式一：图形界面配置（推荐）**
 1. 点击右上角 ⚙️ **设置** 按钮
-2. 填入 `ANTHROPIC_API_KEY`
-3. 点击"保存配置"
+2. 填入 API Key：
+   - `ANTHROPIC_API_KEY` - 用于 Claude Code
+   - `OPENAI_API_KEY` - 用于 Codex
+3. 选择默认 AI 引擎
+4. 点击"保存配置"
 
 **方式二：手动配置**
 ```bash
 cp .env.example .env
-# 编辑 .env 文件，填入 ANTHROPIC_API_KEY
+# 编辑 .env 文件，填入以下配置：
+# ANTHROPIC_API_KEY=sk-ant-xxx  # Claude Code
+# OPENAI_API_KEY=sk-xxx          # Codex
 ```
 
 **获取 API Key**
-- 推荐：[虎三小破站](https://api.husanai.com/register?aff=c34V) - 国内访问快
-- 官方：[Anthropic Console](https://console.anthropic.com/)
+- **Claude Code**:
+  - 推荐：[虎三小破站](https://api.husanai.com/register?aff=c34V) - 国内访问快
+  - 官方：[Anthropic Console](https://console.anthropic.com/)
+- **Codex**: [OpenAI Platform](https://platform.openai.com/)
+
+> 💡 **提示**: 可以只配置一个引擎，也可以同时配置多个自由切换！
 
 ### Step 3: 添加第一个项目
 
@@ -194,14 +208,30 @@ cp .env.example .env
 **使用方法：**
 1. 在任务卡片上点击 🤖 **AI** 按钮
 2. AI 对话框自动打开，任务信息预填充
-3. 在输入框中提问（任务上下文已自动注入）
-4. AI 回答会考虑当前任务的背景
+3. **选择 AI 引擎**（Claude Code 或 Codex）
+4. 在输入框中提问（任务上下文已自动注入）
+5. AI 回答会考虑当前任务的背景
+
+**多引擎切换：** 🔄
+- 在 AI 对话框顶部选择引擎
+- 可随时在 Claude Code 和 Codex 之间切换
+- 对话历史完整保留，不会丢失
+- 不同引擎有不同的专长：
+  - Claude Code：擅长代码理解和架构设计
+  - Codex：擅长代码补全和解释
 
 **示例对话：**
 ```
+[选择引擎：Claude Code]
+
 用户：这个功能应该如何实现？
 AI：（已了解任务"实现用户登录功能"的上下文）
 根据你的任务描述，我建议...
+
+[切换到 Codex]
+
+用户：帮我写一段密码加密的代码
+AI：当然，这是一段使用 bcrypt 的密码加密代码...
 ```
 
 **快捷状态更新：**
@@ -249,10 +279,15 @@ AI：（已了解任务"实现用户登录功能"的上下文）
 ### Q3: AI 功能无法使用？
 
 **A:**
-1. 检查是否配置了 `ANTHROPIC_API_KEY`
-2. 检查 API Key 是否有效
+1. 检查是否配置了至少一个 AI 引擎的 API Key：
+   - `ANTHROPIC_API_KEY`（Claude Code）
+   - `OPENAI_API_KEY`（Codex）
+2. 检查 API Key 是否有效（未过期、有余额）
 3. 检查网络连接（国内用户建议使用虎三小破站）
-4. 查看浏览器控制台和后端日志排查错误
+4. 在 AI 对话框中尝试切换不同的引擎
+5. 查看浏览器控制台和后端日志排查错误
+
+**提示**：可以先配置一个引擎进行测试，后续再添加其他引擎
 
 ### Q4: 项目列表为空？
 
@@ -397,11 +432,14 @@ rm -rf node_modules backend/node_modules frontend/node_modules
 - [ ] 配置项目列表：`.claude/projects.json`
 - [ ] 启动服务：`npm run dev`
 - [ ] 打开浏览器：http://localhost:5173
-- [ ] （可选）配置 AI：设置 → ANTHROPIC_API_KEY
+- [ ] （推荐）配置多引擎 AI：
+  - [ ] 设置 → ANTHROPIC_API_KEY（Claude Code）
+  - [ ] 设置 → OPENAI_API_KEY（Codex）
 - [ ] 添加第一个项目到列表
 - [ ] 创建第一个任务
 - [ ] 尝试 AI 智能拆分任务
 - [ ] 使用 AI 协作助手
+- [ ] 尝试对话中切换 AI 引擎
 
 ---
 

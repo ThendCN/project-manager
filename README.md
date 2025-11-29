@@ -13,6 +13,7 @@
 <p align="center">
   <a href="#features">功能特性</a> •
   <a href="#quick-start">快速开始</a> •
+  <a href="docs/QUICK_START_GUIDE.md">📖 快速上手指南</a> •
   <a href="#documentation">文档</a> •
   <a href="#contributing">贡献指南</a> •
   <a href="#license">许可证</a>
@@ -249,6 +250,8 @@ v1.2.0 重磅更新！CCMage 从项目管理工具升级为 **AI 辅助开发系
 
 ## 🚀 快速开始 {#quick-start}
 
+> 💡 **提示**: 查看 [📖 详细快速上手指南（SOP）](docs/QUICK_START_GUIDE.md) 获取完整的分步教程
+
 ### 前置要求
 
 - Node.js >= 16.0.0
@@ -460,6 +463,11 @@ project-manager/
 - 🤖 启动子任务
 
 ## 📚 API 接口文档 {#documentation}
+
+**用户文档**
+- 📖 [快速上手指南（SOP）](docs/QUICK_START_GUIDE.md) - 完整的分步教程和最佳实践
+
+**API 文档**
 
 ### 项目管理 API
 
