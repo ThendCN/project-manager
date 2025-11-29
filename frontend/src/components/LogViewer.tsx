@@ -9,10 +9,11 @@ interface LogEntry {
 
 interface Props {
   projectName: string;
-  onClose: () => void;
+  onClose?: () => void;
+  embedded?: boolean;
 }
 
-export default function LogViewer({ projectName, onClose }: Props) {
+export default function LogViewer({ projectName, onClose, embedded = false }: Props) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [autoscroll, setAutoscroll] = useState(true);
@@ -70,91 +71,81 @@ export default function LogViewer({ projectName, onClose }: Props) {
     return date.toLocaleTimeString('zh-CN', { hour12: false });
   };
 
-  return (
+  // 主内容容器
+  const mainContent = (
     <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0,0,0,0.5)',
+      background: 'white',
+      borderRadius: embedded ? '0' : '12px',
+      width: embedded ? '100%' : '90%',
+      maxWidth: embedded ? '100%' : '1200px',
+      height: embedded ? '100%' : '80vh',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
+      flexDirection: 'column',
+      overflow: 'hidden'
     }}>
+      {/* 头部 */}
       <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        width: '90%',
-        maxWidth: '1200px',
-        height: '80vh',
+        padding: '16px 20px',
+        borderBottom: '1px solid #e5e7eb',
         display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden'
+        alignItems: 'center',
+        justifyContent: 'space-between'
       }}>
-        {/* 头部 */}
-        <div style={{
-          padding: '16px 20px',
-          borderBottom: '1px solid #e5e7eb',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
-              {projectName} - 运行日志
-            </h2>
-            <div style={{
-              padding: '4px 8px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              background: isConnected ? '#dcfce7' : '#fee2e2',
-              color: isConnected ? '#16a34a' : '#dc2626'
-            }}>
-              {isConnected ? '已连接' : '未连接'}
-            </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>
+            {projectName} - 运行日志
+          </h2>
+          <div style={{
+            padding: '4px 8px',
+            borderRadius: '12px',
+            fontSize: '12px',
+            background: isConnected ? '#dcfce7' : '#fee2e2',
+            color: isConnected ? '#16a34a' : '#dc2626'
+          }}>
+            {isConnected ? '已连接' : '未连接'}
           </div>
+        </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={toggleAutoscroll}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 12px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '6px',
-                background: autoscroll ? '#dcfce7' : 'white',
-                color: autoscroll ? '#16a34a' : '#6b7280',
-                fontSize: '14px',
-                cursor: 'pointer'
-              }}
-            >
-              {autoscroll ? <Pause size={16} /> : <Play size={16} />}
-              {autoscroll ? '暂停滚动' : '开启滚动'}
-            </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={toggleAutoscroll}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 12px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              background: autoscroll ? '#dcfce7' : 'white',
+              color: autoscroll ? '#16a34a' : '#6b7280',
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}
+          >
+            {autoscroll ? <Pause size={16} /> : <Play size={16} />}
+            {autoscroll ? '暂停滚动' : '开启滚动'}
+          </button>
 
-            <button
-              onClick={handleClear}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 12px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '6px',
-                background: 'white',
-                color: '#6b7280',
-                fontSize: '14px',
-                cursor: 'pointer'
-              }}
-            >
-              <Trash2 size={16} />
-              清空
-            </button>
+          <button
+            onClick={handleClear}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 12px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              background: 'white',
+              color: '#6b7280',
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}
+          >
+            <Trash2 size={16} />
+            清空
+          </button>
 
+          {!embedded && onClose && (
             <button
               onClick={onClose}
               style={{
@@ -170,8 +161,9 @@ export default function LogViewer({ projectName, onClose }: Props) {
             >
               <X size={20} />
             </button>
-          </div>
+          )}
         </div>
+      </div>
 
         {/* 日志内容 */}
         <div
@@ -234,7 +226,24 @@ export default function LogViewer({ projectName, onClose }: Props) {
         }}>
           共 {logs.length} 条日志
         </div>
-      </div>
+    </div>
+  );
+
+  // 根据模式返回不同的包装
+  return embedded ? mainContent : (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    }}>
+      {mainContent}
     </div>
   );
 }

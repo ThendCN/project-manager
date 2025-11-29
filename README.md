@@ -24,7 +24,7 @@
   <img alt="Node" src="https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen">
   <img alt="React" src="https://img.shields.io/badge/react-18.2.0-61dafb">
   <img alt="AI" src="https://img.shields.io/badge/AI-Multi%20Engine-9b59b6">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.2.0-orange">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.2.1-orange">
 </p>
 
 ---
@@ -158,9 +158,53 @@
 
 ---
 
-## 🎉 v1.2.0 最新更新
+## 🎉 最新更新
 
-### 🚀 多引擎 AI 编程助手上线
+### 🔥 v1.2.1 - 内置代码编辑器 (2025-11-30)
+
+**在浏览器中直接编辑代码！**
+
+#### ✨ 核心功能
+
+**📝 CodeMirror 6 集成**
+- ✅ **轻量强大** - 现代化的代码编辑器,性能卓越
+- ✅ **语法高亮** - JavaScript/TypeScript/Python/HTML/CSS/JSON/Markdown
+- ✅ **12+ 主题** - GitHub/VS Code/Dracula/Nord/Tokyo Night/Solarized 等
+- ✅ **明暗切换** - 一键切换明暗主题
+- ✅ **Markdown 预览** - 编辑/预览/分屏三种模式
+- ✅ **快捷键支持** - Ctrl+S 保存,Tab 智能缩进
+
+**📁 文件管理器**
+- ✅ **树形结构浏览** - 清晰的文件层级展示
+- ✅ **智能过滤** - 自动隐藏 node_modules、.git 等
+- ✅ **一键预览** - 点击文件立即在编辑器中打开
+- ✅ **实时保存** - 编辑后一键保存到服务器
+
+**🔒 安全保障**
+- ✅ 路径遍历攻击防护
+- ✅ 仅允许访问项目目录内文件
+- ✅ 自动过滤敏感文件
+
+#### 🚀 快速体验
+
+1. 进入项目详情页
+2. 点击"文件编辑器" Tab
+3. 从左侧文件树选择文件
+4. 选择喜欢的主题,开始编辑
+5. Ctrl+S 保存,Markdown 文件支持实时预览
+
+> 💡 **提示**: CodeMirror 6 是轻量级编辑器,加载快,性能好!支持 12+ 精美主题!
+
+#### 📦 技术栈
+
+- **CodeMirror 6** - 现代化代码编辑器
+- **Ant Design Tree** - 文件树组件
+- **12+ 主题** - GitHub/VS Code/Dracula/Nord/Tokyo Night 等
+- **安全验证** - 完善的路径安全机制
+
+---
+
+### 🚀 v1.2.0 - 多引擎 AI 编程助手 (2025-11-29)
 
 v1.2.0 重磅更新！CCMage 从项目管理工具升级为 **AI 辅助开发系统**。
 

@@ -22,12 +22,13 @@ interface HistoryRecord {
 
 interface Props {
   projectName: string;
-  onClose: () => void;
+  onClose?: () => void;
   todoId?: number | null;  // 可选：关联的任务 ID
   initialPrompt?: string;  // 可选：初始提示词
+  embedded?: boolean;      // 是否为嵌入模式
 }
 
-export default function AiDialog({ projectName, onClose, todoId, initialPrompt }: Props) {
+export default function AiDialog({ projectName, onClose, todoId, initialPrompt, embedded = false }: Props) {
   const [prompt, setPrompt] = useState(initialPrompt || '');
   const [output, setOutput] = useState<LogEntry[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -368,61 +369,50 @@ export default function AiDialog({ projectName, onClose, todoId, initialPrompt }
     return new Date(timestamp).toLocaleString('zh-CN');
   };
 
-  return (
+  // 主内容容器
+  const mainContent = (
     <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0,0,0,0.5)',
+      background: 'white',
+      borderRadius: embedded ? '0' : '12px',
+      width: embedded ? '100%' : '90%',
+      maxWidth: embedded ? '100%' : '1200px',
+      height: embedded ? '100%' : '85vh',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
+      flexDirection: 'column',
+      overflow: 'hidden'
     }}>
+      {/* 头部 */}
       <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        width: '90%',
-        maxWidth: '1200px',
-        height: '85vh',
+        padding: '20px 24px',
+        borderBottom: '1px solid #e5e7eb',
         display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden'
+        alignItems: 'center',
+        justifyContent: 'space-between'
       }}>
-        {/* 头部 */}
-        <div style={{
-          padding: '20px 24px',
-          borderBottom: '1px solid #e5e7eb',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', margin: '0 0 4px 0' }}>
-                AI 编程助手
-              </h2>
-              <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-                项目：{projectName}
-                {conversationId && (
-                  <span style={{ marginLeft: '12px', padding: '2px 8px', background: '#dbeafe', color: '#1e40af', borderRadius: '4px', fontSize: '12px' }}>
-                    🔗 对话中
-                  </span>
-                )}
-              </p>
-            </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: '600', margin: '0 0 4px 0' }}>
+              AI 编程助手
+            </h2>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
+              项目：{projectName}
+              {conversationId && (
+                <span style={{ marginLeft: '12px', padding: '2px 8px', background: '#dbeafe', color: '#1e40af', borderRadius: '4px', fontSize: '12px' }}>
+                  🔗 对话中
+                </span>
+              )}
+            </p>
+          </div>
 
-            {/* AI 引擎选择器 */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 12px',
-              background: '#f3f4f6',
-              borderRadius: '8px'
-            }}>
+          {/* AI 引擎选择器 */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 12px',
+            background: '#f3f4f6',
+            borderRadius: '8px'
+          }}>
               <Cpu size={16} color="#6b7280" />
               <select
                 value={selectedEngine}
@@ -499,21 +489,23 @@ export default function AiDialog({ projectName, onClose, todoId, initialPrompt }
               历史记录
             </button>
 
-            <button
-              onClick={onClose}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '8px',
-                border: 'none',
-                borderRadius: '6px',
-                background: 'white',
-                color: '#6b7280',
-                cursor: 'pointer'
-              }}
-            >
-              <X size={20} />
-            </button>
+            {!embedded && onClose && (
+              <button
+                onClick={onClose}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '8px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  background: 'white',
+                  color: '#6b7280',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={20} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -920,6 +912,23 @@ export default function AiDialog({ projectName, onClose, todoId, initialPrompt }
           </div>
         </div>
       </div>
+  );
+
+  // 根据模式返回不同的包装
+  return embedded ? mainContent : (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    }}>
+      {mainContent}
     </div>
   );
 }

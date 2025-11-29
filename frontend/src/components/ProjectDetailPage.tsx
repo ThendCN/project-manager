@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
-import { X, Folder, GitBranch, Package, Code, Play, Square, FolderOpen, Bot, Activity, Search } from 'lucide-react';
+import { X, Folder, GitBranch, Package, Code, Play, Square, FolderOpen, Bot, Activity, Search, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Project, ProjectStatus } from '../types';
 import { executeAction, startProject, stopProject, getRunningStatus, getProjectAnalysis, analyzeProject } from '../api';
 import AnalysisDialog from './AnalysisDialog';
+import { FileExplorer } from './FileExplorer';
+import { CodeEditor } from './CodeEditor';
+import { TodoManager } from './TodoManager';
+import LogViewer from './LogViewer';
+import AiDialog from './AiDialog';
 
 interface Props {
   name: string;
@@ -12,7 +17,7 @@ interface Props {
   onRefresh: () => void;
 }
 
-type TabType = 'overview' | 'todos' | 'logs' | 'ai' | 'analysis';
+type TabType = 'overview' | 'files' | 'todos' | 'logs' | 'ai' | 'analysis';
 
 export default function ProjectDetailPage({ name, project, status, onClose, onRefresh }: Props) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -23,6 +28,8 @@ export default function ProjectDetailPage({ name, project, status, onClose, onRe
   const [analysis, setAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showAnalysisDialog, setShowAnalysisDialog] = useState(false);
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const statusColor = {
     active: '#10b981',
@@ -147,6 +154,7 @@ export default function ProjectDetailPage({ name, project, status, onClose, onRe
 
   const tabs = [
     { id: 'overview', label: '概览', icon: <Activity size={16} /> },
+    { id: 'files', label: '文件', icon: <FileText size={16} /> },
     { id: 'todos', label: '任务', icon: <Code size={16} /> },
     { id: 'logs', label: '日志', icon: <Folder size={16} /> },
     { id: 'ai', label: 'AI 编程', icon: <Bot size={16} /> },
@@ -215,152 +223,322 @@ export default function ProjectDetailPage({ name, project, status, onClose, onRe
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           {/* Left Sidebar */}
           <div style={{
-            width: '280px',
+            width: sidebarCollapsed ? '80px' : '280px',
             borderRight: '1px solid #e5e7eb',
-            padding: '24px',
+            padding: sidebarCollapsed ? '16px 8px' : '24px',
             display: 'flex',
             flexDirection: 'column',
             gap: '24px',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            transition: 'width 0.3s ease, padding 0.3s ease',
+            position: 'relative'
           }}>
-            {/* Status */}
-            <div>
-              <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '12px' }}>
-                状态
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <StatusItem
-                  label="分类"
-                  value={project.status}
-                  color={statusColor}
-                />
-                {status && (
-                  <>
-                    <StatusItem
-                      label="Git"
-                      value={status.hasGit ? (status.gitBranch || 'N/A') : '未初始化'}
-                      color={status.hasGit ? '#10b981' : '#6b7280'}
-                    />
-                    <StatusItem
-                      label="未提交"
-                      value={status.uncommittedFiles > 0 ? `${status.uncommittedFiles} 个` : '无'}
-                      color={status.uncommittedFiles > 0 ? '#f59e0b' : '#10b981'}
-                    />
-                    <StatusItem
-                      label="依赖"
-                      value={status.dependenciesInstalled ? '已安装' : '未安装'}
-                      color={status.dependenciesInstalled ? '#10b981' : '#ef4444'}
-                    />
-                  </>
-                )}
-                {runningStatus?.running && (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '6px 12px',
-                    background: '#dcfce7',
-                    borderRadius: '6px',
-                    marginTop: '4px'
-                  }}>
+            {/* Toggle Button */}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '-12px',
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                background: 'white',
+                border: '1px solid #e5e7eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                zIndex: 10,
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#f9fafb';
+                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'white';
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+              }}
+            >
+              {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+            </button>
+
+            {sidebarCollapsed ? (
+              /* Collapsed View - Icons Only */
+              <>
+                {/* Status Icon */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '16px',
+                  paddingTop: '24px'
+                }}>
+                  <div
+                    title="状态"
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      background: '#f3f4f6',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Activity size={20} color="#6b7280" />
+                  </div>
+
+                  {/* Running Status Indicator */}
+                  {runningStatus?.running && (
                     <div style={{
-                      width: '8px',
-                      height: '8px',
+                      width: '12px',
+                      height: '12px',
                       borderRadius: '50%',
-                      background: '#16a34a',
+                      background: '#10b981',
                       animation: 'pulse 2s infinite'
                     }} />
-                    <span style={{ fontSize: '14px', color: '#16a34a', fontWeight: '500' }}>
-                      服务运行中
-                    </span>
+                  )}
+
+                  {/* Action Icons */}
+                  {runningStatus?.running ? (
+                    <div
+                      title="停止服务"
+                      onClick={handleStop}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        background: '#fef2f2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: isStopping ? 'not-allowed' : 'pointer',
+                        opacity: isStopping ? 0.5 : 1
+                      }}
+                    >
+                      <Square size={20} color="#ef4444" />
+                    </div>
+                  ) : (
+                    <div
+                      title="启动服务"
+                      onClick={handleStart}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        background: '#dcfce7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: isStarting ? 'not-allowed' : 'pointer',
+                        opacity: isStarting ? 0.5 : 1
+                      }}
+                    >
+                      <Play size={20} color="#10b981" />
+                    </div>
+                  )}
+
+                  <div
+                    title="打开目录"
+                    onClick={() => handleAction('open-directory')}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      background: '#f3f4f6',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <FolderOpen size={20} color="#6b7280" />
+                  </div>
+
+                  <div
+                    title="VSCode"
+                    onClick={() => handleAction('open-vscode')}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      background: '#f3f4f6',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Code size={20} color="#6b7280" />
+                  </div>
+
+                  {status?.hasDependencies && !status?.dependenciesInstalled && (
+                    <div
+                      title="安装依赖"
+                      onClick={() => handleAction('install-deps')}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        background: '#dbeafe',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Package size={20} color="#3b82f6" />
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              /* Expanded View - Full Content */
+              <>
+                {/* Status */}
+                <div>
+                  <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '12px' }}>
+                    状态
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <StatusItem
+                      label="分类"
+                      value={project.status}
+                      color={statusColor}
+                    />
+                    {status && (
+                      <>
+                        <StatusItem
+                          label="Git"
+                          value={status.hasGit ? (status.gitBranch || 'N/A') : '未初始化'}
+                          color={status.hasGit ? '#10b981' : '#6b7280'}
+                        />
+                        <StatusItem
+                          label="未提交"
+                          value={status.uncommittedFiles > 0 ? `${status.uncommittedFiles} 个` : '无'}
+                          color={status.uncommittedFiles > 0 ? '#f59e0b' : '#10b981'}
+                        />
+                        <StatusItem
+                          label="依赖"
+                          value={status.dependenciesInstalled ? '已安装' : '未安装'}
+                          color={status.dependenciesInstalled ? '#10b981' : '#ef4444'}
+                        />
+                      </>
+                    )}
+                    {runningStatus?.running && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 12px',
+                        background: '#dcfce7',
+                        borderRadius: '6px',
+                        marginTop: '4px'
+                      }}>
+                        <div style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: '#16a34a',
+                          animation: 'pulse 2s infinite'
+                        }} />
+                        <span style={{ fontSize: '14px', color: '#16a34a', fontWeight: '500' }}>
+                          服务运行中
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tech Stack */}
+                {project.stack && project.stack.length > 0 && (
+                  <div>
+                    <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '12px' }}>
+                      技术栈
+                    </h3>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {project.stack.map(tech => (
+                        <span key={tech} style={{
+                          padding: '4px 8px',
+                          background: '#f3f4f6',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          color: '#374151'
+                        }}>
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
 
-            {/* Tech Stack */}
-            {project.stack && project.stack.length > 0 && (
-              <div>
-                <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '12px' }}>
-                  技术栈
-                </h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {project.stack.map(tech => (
-                    <span key={tech} style={{
-                      padding: '4px 8px',
-                      background: '#f3f4f6',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      color: '#374151'
-                    }}>
-                      {tech}
-                    </span>
-                  ))}
+                {/* Actions */}
+                <div>
+                  <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '12px' }}>
+                    操作
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {runningStatus?.running ? (
+                      <ActionButton
+                        icon={<Square size={16} />}
+                        label="停止服务"
+                        onClick={handleStop}
+                        disabled={isStopping}
+                        variant="danger"
+                        fullWidth
+                      />
+                    ) : (
+                      <ActionButton
+                        icon={<Play size={16} />}
+                        label="启动服务"
+                        onClick={handleStart}
+                        disabled={isStarting}
+                        variant="success"
+                        fullWidth
+                      />
+                    )}
+                    <ActionButton
+                      icon={<FolderOpen size={16} />}
+                      label="打开目录"
+                      onClick={() => handleAction('open-directory')}
+                      fullWidth
+                    />
+                    <ActionButton
+                      icon={<Code size={16} />}
+                      label="VSCode"
+                      onClick={() => handleAction('open-vscode')}
+                      fullWidth
+                    />
+                    {status?.hasDependencies && !status?.dependenciesInstalled && (
+                      <ActionButton
+                        icon={<Package size={16} />}
+                        label="安装依赖"
+                        onClick={() => handleAction('install-deps')}
+                        variant="primary"
+                        fullWidth
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
 
-            {/* Actions */}
-            <div>
-              <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#6b7280', marginBottom: '12px' }}>
-                操作
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {runningStatus?.running ? (
-                  <ActionButton
-                    icon={<Square size={16} />}
-                    label="停止服务"
-                    onClick={handleStop}
-                    disabled={isStopping}
-                    variant="danger"
-                    fullWidth
-                  />
-                ) : (
-                  <ActionButton
-                    icon={<Play size={16} />}
-                    label="启动服务"
-                    onClick={handleStart}
-                    disabled={isStarting}
-                    variant="success"
-                    fullWidth
-                  />
+                {/* Message */}
+                {message && (
+                  <div style={{
+                    padding: '12px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    background: message.includes('失败') || message.includes('错误') ? '#fef2f2' : '#f0fdf4',
+                    color: message.includes('失败') || message.includes('错误') ? '#ef4444' : '#10b981',
+                    border: `1px solid ${message.includes('失败') || message.includes('错误') ? '#fecaca' : '#bbf7d0'}`
+                  }}>
+                    {message}
+                  </div>
                 )}
-                <ActionButton
-                  icon={<FolderOpen size={16} />}
-                  label="打开目录"
-                  onClick={() => handleAction('open-directory')}
-                  fullWidth
-                />
-                <ActionButton
-                  icon={<Code size={16} />}
-                  label="VSCode"
-                  onClick={() => handleAction('open-vscode')}
-                  fullWidth
-                />
-                {status?.hasDependencies && !status?.dependenciesInstalled && (
-                  <ActionButton
-                    icon={<Package size={16} />}
-                    label="安装依赖"
-                    onClick={() => handleAction('install-deps')}
-                    variant="primary"
-                    fullWidth
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Message */}
-            {message && (
-              <div style={{
-                padding: '12px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                background: message.includes('失败') || message.includes('错误') ? '#fef2f2' : '#f0fdf4',
-                color: message.includes('失败') || message.includes('错误') ? '#ef4444' : '#10b981',
-                border: `1px solid ${message.includes('失败') || message.includes('错误') ? '#fecaca' : '#bbf7d0'}`
-              }}>
-                {message}
-              </div>
+              </>
             )}
           </div>
 
@@ -413,93 +591,48 @@ export default function ProjectDetailPage({ name, project, status, onClose, onRe
               {activeTab === 'overview' && (
                 <OverviewTab project={project} status={status} runningStatus={runningStatus} />
               )}
+              {activeTab === 'files' && (
+                <div style={{ height: '100%', display: 'flex' }}>
+                  {/* 文件树 */}
+                  <div style={{
+                    width: '300px',
+                    borderRight: '1px solid #e5e7eb',
+                    height: '100%',
+                    overflow: 'hidden'
+                  }}>
+                    <FileExplorer
+                      projectName={name}
+                      onFileSelect={(filePath) => setSelectedFilePath(filePath)}
+                    />
+                  </div>
+                  {/* 编辑器 */}
+                  <div style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
+                    <CodeEditor
+                      projectName={name}
+                      filePath={selectedFilePath}
+                    />
+                  </div>
+                </div>
+              )}
               {activeTab === 'todos' && (
-                <div style={{ padding: '24px', height: '100%', overflowY: 'auto' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>
-                    任务管理
-                  </h3>
-                  <p style={{ color: '#6b7280', marginBottom: '16px' }}>
-                    点击下方按钮打开完整的任务管理界面
-                  </p>
-                  <button
-                    onClick={() => {
-                      // 这里可以触发打开 TodoManager 弹窗
-                      const event = new CustomEvent('openTodoManager', { detail: { projectName: name } });
-                      window.dispatchEvent(event);
-                    }}
-                    style={{
-                      padding: '10px 20px',
-                      background: '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    打开任务管理
-                  </button>
+                <div style={{ height: '100%', position: 'relative' }}>
+                  <TodoManager projectName={name} embedded />
                 </div>
               )}
               {activeTab === 'logs' && (
-                <div style={{ padding: '24px', height: '100%', overflowY: 'auto' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>
-                    运行日志
-                  </h3>
-                  <p style={{ color: '#6b7280', marginBottom: '16px' }}>
-                    {runningStatus?.running
-                      ? '点击下方按钮查看实时日志'
-                      : '项目未运行，启动项目后可查看日志'}
-                  </p>
-                  {runningStatus?.running && (
-                    <button
-                      onClick={() => {
-                        const event = new CustomEvent('openLogViewer', { detail: { projectName: name } });
-                        window.dispatchEvent(event);
-                      }}
-                      style={{
-                        padding: '10px 20px',
-                        background: '#10b981',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      查看日志
-                    </button>
+                <div style={{ height: '100%', position: 'relative' }}>
+                  {runningStatus?.running ? (
+                    <LogViewer projectName={name} embedded />
+                  ) : (
+                    <div style={{ padding: '24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
+                      <p style={{ color: '#6b7280', fontSize: '16px' }}>项目未运行，启动项目后可查看日志</p>
+                    </div>
                   )}
                 </div>
               )}
               {activeTab === 'ai' && (
-                <div style={{ padding: '24px', height: '100%', overflowY: 'auto' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>
-                    AI 编程助手
-                  </h3>
-                  <p style={{ color: '#6b7280', marginBottom: '16px' }}>
-                    使用 AI 助手帮助你完成编程任务
-                  </p>
-                  <button
-                    onClick={() => {
-                      const event = new CustomEvent('openAiDialog', { detail: { projectName: name } });
-                      window.dispatchEvent(event);
-                    }}
-                    style={{
-                      padding: '10px 20px',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    打开 AI 助手
-                  </button>
+                <div style={{ height: '100%', position: 'relative' }}>
+                  <AiDialog projectName={name} embedded />
                 </div>
               )}
               {activeTab === 'analysis' && (

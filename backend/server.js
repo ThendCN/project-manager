@@ -9,6 +9,7 @@ const { registerManagementRoutes } = require('./managementRoutes');
 const { registerAnalysisRoutes } = require('./analysisRoutes');
 const { registerProjectCreationRoutes } = require('./projectCreationRoutes');
 const { registerTodoAiRoutes } = require('./todoAiRoutes');
+const fileRoutes = require('./fileRoutes');
 const processManager = require('./processManager');
 const db = require('./database');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
@@ -698,6 +699,9 @@ registerTodoAiRoutes(app);
 
 // 注册项目分析路由
 registerAnalysisRoutes(app, PROJECT_ROOT, PROJECTS_CONFIG);
+
+// 注册文件管理路由
+app.use('/api', fileRoutes);
 
 // 启动服务器
 app.listen(PORT, () => {

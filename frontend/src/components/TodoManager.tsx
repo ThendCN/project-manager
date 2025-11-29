@@ -6,10 +6,11 @@ import { decomposeTask, createDecomposedTasks } from '../api';
 
 interface TodoManagerProps {
   projectName: string;
-  onClose: () => void;
+  onClose?: () => void;  // 改为可选
+  embedded?: boolean;    // 是否为嵌入模式
 }
 
-export function TodoManager({ projectName, onClose }: TodoManagerProps) {
+export function TodoManager({ projectName, onClose, embedded = false }: TodoManagerProps) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [labels, setLabels] = useState<Label[]>([]);
   const [loading, setLoading] = useState(true);
@@ -330,7 +331,17 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
   };
 
   if (loading) {
-    return (
+    return embedded ? (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        background: 'white'
+      }}>
+        <div style={{ textAlign: 'center' }}>加载中...</div>
+      </div>
+    ) : (
       <div style={{
         position: 'fixed',
         inset: 0,
@@ -351,41 +362,34 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
     );
   }
 
-  return (
+  // 主内容容器
+  const mainContent = (
     <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0,0,0,0.5)',
+      background: 'white',
+      borderRadius: embedded ? '0' : '12px',
+      boxShadow: embedded ? 'none' : '0 20px 25px -5px rgba(0,0,0,0.1)',
+      width: '100%',
+      height: embedded ? '100%' : 'auto',
+      maxHeight: embedded ? '100%' : '90vh',
+      maxWidth: embedded ? '100%' : '1200px',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 50,
-      padding: '16px'
+      flexDirection: 'column'
     }}>
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-        maxWidth: '1200px',
-        width: '100%',
-        maxHeight: '90vh',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        {/* Header */}
-        <div style={{ borderBottom: '1px solid #e5e7eb', padding: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#111827', margin: 0 }}>
-                {projectName} - 任务管理
-              </h2>
-              <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '14px' }}>
-                <span style={{ color: '#6b7280' }}>总计: {stats.total}</span>
-                <span style={{ color: '#d97706' }}>待处理: {stats.pending}</span>
-                <span style={{ color: '#3b82f6' }}>进行中: {stats.in_progress}</span>
-                <span style={{ color: '#10b981' }}>已完成: {stats.completed}</span>
-              </div>
+      {/* Header */}
+      <div style={{ borderBottom: '1px solid #e5e7eb', padding: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#111827', margin: 0 }}>
+              {projectName} - 任务管理
+            </h2>
+            <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '14px' }}>
+              <span style={{ color: '#6b7280' }}>总计: {stats.total}</span>
+              <span style={{ color: '#d97706' }}>待处理: {stats.pending}</span>
+              <span style={{ color: '#3b82f6' }}>进行中: {stats.in_progress}</span>
+              <span style={{ color: '#10b981' }}>已完成: {stats.completed}</span>
             </div>
+          </div>
+          {!embedded && onClose && (
             <button
               onClick={onClose}
               style={{
@@ -401,8 +405,9 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
             >
               <X style={{ width: '24px', height: '24px' }} />
             </button>
-          </div>
+          )}
         </div>
+      </div>
 
         {/* Filters & Actions */}
         <div style={{ borderBottom: '1px solid #e5e7eb', padding: '16px', background: '#f9fafb' }}>
@@ -1240,7 +1245,22 @@ export function TodoManager({ projectName, onClose }: TodoManagerProps) {
             }}
           />
         )}
-      </div>
+    </div>
+  );
+
+  // 根据模式返回不同的包装
+  return embedded ? mainContent : (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 50,
+      padding: '16px'
+    }}>
+      {mainContent}
     </div>
   );
 }

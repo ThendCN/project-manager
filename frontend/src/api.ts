@@ -420,3 +420,45 @@ export async function getAiSessionStatus(sessionId: string): Promise<any> {
   if (!response.ok) throw new Error('获取会话状态失败');
   return response.json();
 }
+
+// ========== 文件管理 API ==========
+
+/**
+ * 获取项目文件树
+ */
+export async function getProjectFiles(projectName: string, subPath: string = ''): Promise<any> {
+  const url = subPath
+    ? `${API_BASE}/projects/${projectName}/files?path=${encodeURIComponent(subPath)}`
+    : `${API_BASE}/projects/${projectName}/files`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('获取文件树失败');
+  return response.json();
+}
+
+/**
+ * 读取文件内容
+ */
+export async function readFile(projectName: string, filePath: string): Promise<any> {
+  const response = await fetch(
+    `${API_BASE}/files/read?project=${encodeURIComponent(projectName)}&path=${encodeURIComponent(filePath)}`
+  );
+  if (!response.ok) throw new Error('读取文件失败');
+  return response.json();
+}
+
+/**
+ * 保存文件
+ */
+export async function saveFile(
+  projectName: string,
+  filePath: string,
+  content: string
+): Promise<any> {
+  const response = await fetch(`${API_BASE}/files/save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ project: projectName, path: filePath, content })
+  });
+  if (!response.ok) throw new Error('保存文件失败');
+  return response.json();
+}

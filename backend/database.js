@@ -518,7 +518,7 @@ class DatabaseManager {
       }
     }
 
-    if (fields.length === 0) return;
+    if (fields.length === 0) return { changes: 0 };
 
     values.push(id);
     const stmt = this.db.prepare(`UPDATE todos SET ${fields.join(', ')} WHERE id = ?`);

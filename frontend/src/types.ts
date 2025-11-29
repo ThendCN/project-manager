@@ -287,3 +287,30 @@ export interface TodoWithSubtasks extends Todo {
   verification?: AiVerification;
   aiSessions?: AiSession[];
 }
+
+// ========== 文件管理类型 ==========
+
+export interface FileNode {
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  size?: number;
+  extension?: string;
+  modifiedAt?: string;
+  children?: FileNode[];
+}
+
+export interface FileData {
+  path: string;
+  content: string;
+  size: number;
+  encoding: string;
+  language: string;
+  modifiedAt: string;
+}
+
+export interface FileSaveResult {
+  path: string;
+  size: number;
+  modifiedAt: string;
+}
